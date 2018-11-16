@@ -18,13 +18,13 @@ func main() {
 		return
 	}
 
-	volQ := tb.InlineButton{
+	ETH := tb.InlineButton{
 		Unique: "ETH",
 		Text:   "ETH",
 	}
 	// Inline
 	mainInline := [][]tb.InlineButton{
-		[]tb.InlineButton{volQ},
+		[]tb.InlineButton{ETH},
 	}
 	b.Handle("/start", func(m *tb.Message) {
 		whitelist := [2]string{os.Getenv("DevOne"), os.Getenv("DevTwo")} // id's
@@ -33,7 +33,7 @@ func main() {
 				InlineKeyboard: mainInline,
 			})
 
-			b.Handle(&volQ, func(c *tb.Callback) {
+			b.Handle(&ETH, func(c *tb.Callback) {
 				ps := portscanner.NewPortScanner("ip", 2*time.Second, 5)
 				ethCheck := ps.IsOpen(8545)
 				var resp string
