@@ -1,1 +1,1 @@
-# ETHCheck monitoring bot
+# Nodes monitoring bot
