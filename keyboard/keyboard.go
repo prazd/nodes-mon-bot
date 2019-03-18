@@ -3,34 +3,19 @@ package keyboard
 import tb "gopkg.in/tucnak/telebot.v2"
 
 var (
-	EthButton = tb.InlineButton{
-		Unique: "ETH",
-		Text:   "ETH",
-	}
+	EthButton = tb.ReplyButton{Text: "ETH"}
 
-	EtcButton = tb.InlineButton{
-		Unique: "ETC",
-		Text:   "ETC",
-	}
+	EtcButton = tb.ReplyButton{Text: "ETC"}
 
-	BtcButton = tb.InlineButton{
-		Unique: "BTC",
-		Text:   "BTC",
-	}
+	BtcButton = tb.ReplyButton{Text: "BTC"}
 
-	BchButton = tb.InlineButton{
-		Unique: "BCH",
-		Text:   "BCH",
-	}
+	BchButton = tb.ReplyButton{Text: "BCH"}
 
-	LtcButton = tb.InlineButton{
-		Unique: "LTC",
-		Text:   "LTC",
-	}
+	LtcButton = tb.ReplyButton{Text: "LTC"}
 
-	MainMenu = [][]tb.InlineButton{
-		[]tb.InlineButton{EthButton, EtcButton},
-		[]tb.InlineButton{BtcButton, BchButton, LtcButton},
+	MainMenu = [][]tb.ReplyButton{
+		[]tb.ReplyButton{EthButton, EtcButton},
+		[]tb.ReplyButton{BtcButton, BchButton, LtcButton},
 	}
 
 	// TODO: Balance check

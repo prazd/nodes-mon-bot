@@ -1,7 +1,6 @@
-package handlers
+package utils
 
 import (
-	"fmt"
 	"github.com/anvie/port-scanner"
 	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/state"
@@ -60,7 +59,7 @@ func GetMessage(result map[string]bool) string {
 		}
 		message += "\n"
 	}
-	fmt.Println(message)
+
 	return message
 }
 
@@ -79,5 +78,6 @@ func IsAlive(curr string, configData config.Config) string {
 	wg.Wait()
 
 	message := GetMessage(nodesState.Result)
+
 	return message
 }
