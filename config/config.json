@@ -1,26 +1,26 @@
 {
-  "ethNodes":{
-    "port":0,
+    "ethNodes":{
+      "port":0,
+      "addresses":[]
+    },
+    "etcNodes":{
+    "port":8545,
     "addresses":[]
-  },
-  "etcNodes":{
-    "port":0,
-    "addresses":[]
-  },
-  "btcNodes":{
-    "port":0,
-    "addresses":[]
-  },
-  "bchNodes":{
-    "port":0,
-    "addresses":[]
-  },
-  "ltcNodes":{
-    "port":0,
-    "addresses":[]
-  },
-  "xlmNodes": {
-    "port": 0,
-    "addresses": []
+    },
+    "btcNodes":{
+      "port":80,
+      "addresses":[]
+    },
+    "bchNodes":{
+      "port":3000,
+      "addresses":[]
+    },
+    "ltcNodes":{
+      "port":3001,
+      "addresses":[]
+    },
+    "xlmNodes":{
+      "port":8000,
+      "addresses":[]
+    }
   }
-}

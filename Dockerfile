@@ -1,11 +1,12 @@
-FROM golang:latest AS builder
+FROM golang:alpine
 
-RUN mkdir /build
-ADD . /build
-WORKDIR /build
+RUN mkdir /app
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh
+
+ADD . /app
+WORKDIR /app
 RUN go get -d ./...
 RUN go build -o bin/main ./bot
 
-FROM ubuntu:latest
-COPY --from=builder /build/bin /app
-CMD ["/app/main"]
+CMD ["/app/bin/main"]
