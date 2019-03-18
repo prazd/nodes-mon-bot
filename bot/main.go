@@ -16,7 +16,7 @@ import (
 
 func ReadConfig() config.Config {
 
-	defaultConfigPath, _ := filepath.Abs("./config/config.json")
+	defaultConfigPath, _ := filepath.Abs("../config/config.json")
 	configFile, err := os.Open(defaultConfigPath)
 	if err != nil {
 		log.Fatal(err)
