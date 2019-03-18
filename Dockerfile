@@ -5,8 +5,8 @@ RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh
 
 ADD . /app
-WORKDIR /app
+WORKDIR /app/bot
 RUN go get -d ./...
-RUN go build -o bin/main ./bot
+RUN go build -o main .
 
-CMD ["/app/bin/main"]
+CMD ["/app/bot/main"]

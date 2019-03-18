@@ -1,6 +1,6 @@
 {
     "ethNodes":{
-      "port":0,
+      "port":8545,
       "addresses":[]
     },
     "etcNodes":{
