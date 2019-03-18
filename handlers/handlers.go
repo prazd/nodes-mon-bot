@@ -1,10 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/anvie/port-scanner"
 	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/state"
-	. "github.com/prazd/nodes_mon_bot/state"
 	"sync"
 	"time"
 )
@@ -15,16 +15,14 @@ import (
 //	c <- ps.IsOpen(port)
 //}
 
-func Worker(wg *sync.WaitGroup, addr string, port int, r *NodesState) {
+func Worker(wg *sync.WaitGroup, addr string, port int, r *state.NodesState) {
 	defer wg.Done()
-	ps := portscanner.NewPortScanner(addr, 2*time.Second, 5)
+	ps := portscanner.NewPortScanner(addr, 1*time.Second, 1)
 	isAlive := ps.IsOpen(port)
 	r.Set(addr, isAlive)
 }
 
-func IsAlive(curr string, configData config.Config) string {
-
-	nodesState := state.New()
+func GetHostInfo(curr string, configData config.Config) ([]string, int) {
 
 	var addresses []string
 	var port int
@@ -47,17 +45,12 @@ func IsAlive(curr string, configData config.Config) string {
 		port = configData.LtcNodes.Port
 	}
 
-	var wg sync.WaitGroup
+	return addresses, port
+}
 
-	for i := 0; i < len(addresses); i++ {
-		wg.Add(1)
-		go Worker(&wg, addresses[i], port, nodesState)
-	}
-	wg.Wait()
-
+func GetMessage(result map[string]bool) string {
 	var message string
-
-	for address, status := range nodesState.Result {
+	for address, status := range result {
 		message += address
 		switch status {
 		case true:
@@ -67,6 +60,24 @@ func IsAlive(curr string, configData config.Config) string {
 		}
 		message += "\n"
 	}
+	fmt.Println(message)
+	return message
+}
 
+func IsAlive(curr string, configData config.Config) string {
+
+	nodesState := state.New()
+
+	addresses, port := GetHostInfo(curr, configData)
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < len(addresses); i++ {
+		wg.Add(1)
+		go Worker(&wg, addresses[i], port, nodesState)
+	}
+	wg.Wait()
+
+	message := GetMessage(nodesState.Result)
 	return message
 }

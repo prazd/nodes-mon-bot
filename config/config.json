@@ -4,8 +4,8 @@
     "addresses":[]
   },
   "etcNodes":{
-  "port":0,
-  "addresses":[]
+    "port":0,
+    "addresses":[]
   },
   "btcNodes":{
     "port":0,

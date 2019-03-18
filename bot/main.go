@@ -57,50 +57,63 @@ func main() {
 
 			// Check ETH nodes status
 			b.Handle(&keyboard.EthButton, func(c *tb.Callback) {
+
 				message := handlers.IsAlive("eth", configData)
+
 				b.Edit(c.Message, message, &tb.ReplyMarkup{
 					InlineKeyboard: keyboard.MainMenu,
 				})
+
 				b.Respond(c, &tb.CallbackResponse{})
 			})
 
 			// Check ETC nodes status
 			b.Handle(&keyboard.EtcButton, func(c *tb.Callback) {
+
 				message := handlers.IsAlive("etc", configData)
+
 				b.Edit(c.Message, message, &tb.ReplyMarkup{
 					InlineKeyboard: keyboard.MainMenu,
 				})
+
 				b.Respond(c, &tb.CallbackResponse{})
 			})
 
 			// Check BTC nodes status
 			b.Handle(&keyboard.BtcButton, func(c *tb.Callback) {
 				message := handlers.IsAlive("btc", configData)
+
 				b.Edit(c.Message, message, &tb.ReplyMarkup{
 					InlineKeyboard: keyboard.MainMenu,
 				})
+
 				b.Respond(c, &tb.CallbackResponse{})
 			})
 
 			// Check BCH nodes status
 			b.Handle(&keyboard.BchButton, func(c *tb.Callback) {
 				message := handlers.IsAlive("bch", configData)
+
 				b.Edit(c.Message, message, &tb.ReplyMarkup{
 					InlineKeyboard: keyboard.MainMenu,
 				})
+
 				b.Respond(c, &tb.CallbackResponse{})
 			})
 
 			// Check LTC nodes status
 			b.Handle(&keyboard.LtcButton, func(c *tb.Callback) {
 				message := handlers.IsAlive("ltc", configData)
+
 				b.Edit(c.Message, message, &tb.ReplyMarkup{
 					InlineKeyboard: keyboard.MainMenu,
 				})
+
 				b.Respond(c, &tb.CallbackResponse{})
 			})
 
 		}
 	})
+
 	b.Start()
 }
