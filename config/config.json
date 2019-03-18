@@ -1,0 +1,22 @@
+{
+  "ethNodes":{
+    "port":0,
+    "addresses":[]
+  },
+  "etcNodes":{
+  "port":0,
+  "addresses":[]
+  },
+  "btcNodes":{
+    "port":0,
+    "addresses":[]
+  },
+  "bchNodes":{
+    "port":0,
+    "addresses":[]
+  },
+  "ltcNodes":{
+    "port":0,
+    "addresses":[]
+  }
+}
