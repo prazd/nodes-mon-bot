@@ -72,5 +72,9 @@ func main() {
 		b.Send(m.Sender, utils.IsAlive("ltc", configData))
 	})
 
+	b.Handle(&keyboard.XlmButton, func(m *tb.Message) {
+		b.Send(m.Sender, utils.IsAlive("xlm", configData))
+	})
+
 	b.Start()
 }

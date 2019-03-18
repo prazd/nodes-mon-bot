@@ -18,5 +18,9 @@
   "ltcNodes":{
     "port":0,
     "addresses":[]
+  },
+  "xlmNodes": {
+    "port": 0,
+    "addresses": []
   }
 }

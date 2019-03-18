@@ -21,4 +21,8 @@ type Config struct {
 		Port      int      `json:"port"`
 		Addresses []string `json:"addresses"`
 	} `json:"ltcNodes"`
+	XlmNodes struct {
+		Port      int      `json:"port"`
+		Addresses []string `json:"addresses"`
+	} `json:"xlmNodes"`
 }

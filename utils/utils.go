@@ -42,6 +42,9 @@ func GetHostInfo(curr string, configData config.Config) ([]string, int) {
 	case "ltc":
 		addresses = configData.LtcNodes.Addresses
 		port = configData.LtcNodes.Port
+	case "xlm":
+		addresses = configData.XlmNodes.Addresses
+		port = configData.XlmNodes.Port
 	}
 
 	return addresses, port

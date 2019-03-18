@@ -13,9 +13,12 @@ var (
 
 	LtcButton = tb.ReplyButton{Text: "LTC"}
 
+	XlmButton = tb.ReplyButton{Text: "XLM"}
+
 	MainMenu = [][]tb.ReplyButton{
 		[]tb.ReplyButton{EthButton, EtcButton},
 		[]tb.ReplyButton{BtcButton, BchButton, LtcButton},
+		[]tb.ReplyButton{XlmButton},
 	}
 
 	// TODO: Balance check
