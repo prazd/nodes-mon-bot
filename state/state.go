@@ -15,12 +15,8 @@ func New() *NodesState {
 	}
 }
 
-func (ds *NodesState) set(key string, value bool) {
-	ds.Result[key] = value
-}
-
 func (ds *NodesState) Set(key string, value bool) {
 	ds.Lock()
 	defer ds.Unlock()
-	ds.set(key, value)
+	ds.Result[key] = value
 }

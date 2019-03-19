@@ -1,0 +1,6 @@
+github.com/anvie/port-scanner v0.0.0-20180225151059-8159197d3770 h1:1KEvfMGAjISVzk3Ti6pfaOgtoC3naoU0LfiJooZDNO8=
+github.com/anvie/port-scanner v0.0.0-20180225151059-8159197d3770/go.mod h1:QGzdstKeoHmMWwi9oNHZ7DQzEj9pi7H42171pkj9htk=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+gopkg.in/tucnak/telebot.v2 v2.0.0-20190213110836-e6cfaa833930 h1:iBc9Wv0kN3j0qRzHQH+BKOuRdEVu/z4QuK0YN2p9pro=
+gopkg.in/tucnak/telebot.v2 v2.0.0-20190213110836-e6cfaa833930/go.mod h1:EmWSFwexO5JPTHiU7gDd9HMCCiyatACwO0HhuKNsOd0=

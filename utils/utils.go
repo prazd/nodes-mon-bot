@@ -1,5 +1,4 @@
 package utils
-
 import (
 	"github.com/anvie/port-scanner"
 	"github.com/prazd/nodes_mon_bot/config"
@@ -7,12 +6,6 @@ import (
 	"sync"
 	"time"
 )
-
-// TODO: Balance check
-//func NodesAlive(address string, port int, c chan bool) {
-//	ps := portscanner.NewPortScanner(address, 2*time.Second, 5)
-//	c <- ps.IsOpen(port)
-//}
 
 func Worker(wg *sync.WaitGroup, addr string, port int, r *state.NodesState) {
 	defer wg.Done()

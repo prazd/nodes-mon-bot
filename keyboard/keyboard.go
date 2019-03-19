@@ -21,5 +21,4 @@ var (
 		[]tb.ReplyButton{XlmButton},
 	}
 
-	// TODO: Balance check
 )
