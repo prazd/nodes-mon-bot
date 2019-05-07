@@ -15,10 +15,10 @@ var (
 
 	XlmButton = tb.ReplyButton{Text: "XLM"}
 
+
 	MainMenu = [][]tb.ReplyButton{
-		[]tb.ReplyButton{EthButton, EtcButton},
-		[]tb.ReplyButton{BtcButton, BchButton, LtcButton},
-		[]tb.ReplyButton{XlmButton},
+		[]tb.ReplyButton{EthButton, EtcButton, BtcButton},
+		[]tb.ReplyButton{XlmButton, BchButton, LtcButton},
 	}
 
 )

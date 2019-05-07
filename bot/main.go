@@ -9,9 +9,11 @@ import (
 	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/keyboard"
 	"github.com/prazd/nodes_mon_bot/utils"
+	"github.com/prazd/nodes_mon_bot/subscribe"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 func ReadConfig() (*config.Config, error) {
@@ -56,12 +58,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	// channels for subscribe
+	Subscribtion := subscribe.SubNew()
+
 	b.Handle("/start", func(m *tb.Message) {
 		b.Send(m.Sender, "Hi!I can help you with nodes monitoring!", &tb.SendOptions{ParseMode: "Markdown"},
 			&tb.ReplyMarkup{ResizeReplyKeyboard: true, ReplyKeyboard: keyboard.MainMenu})
 	})
 
-	// Handlers
+	// Main handlers
 	b.Handle(&keyboard.EthButton, func(m *tb.Message) {
 		b.Send(m.Sender, utils.IsAlive("eth", *configData))
 	})
@@ -84,6 +89,57 @@ func main() {
 
 	b.Handle(&keyboard.XlmButton, func(m *tb.Message) {
 		b.Send(m.Sender, utils.IsAlive("xlm", *configData))
+	})
+
+
+	// Subscribe handlers
+
+	b.Handle("/subscribe", func(m *tb.Message){
+		params := strings.Split(m.Text, " ")
+
+		currencies := []string{"eth","etc","xlm","bch","btc","ltc"}
+
+		ok := utils.Contains(params[1], currencies)
+
+		if !ok{
+			b.Send(m.Sender, "Mistake in command!")
+			return
+		}
+
+		utils.StartSubscribe(params[1], *configData, b, m, &Subscribtion)
+	})
+
+	b.Handle("/stop", func(m *tb.Message){
+		params := strings.Split(m.Text, " ")
+		switch params[1] {
+		case "eth":
+			close(Subscribtion.Info[m.Sender.ID].Eth.SubsChan)
+			Subscribtion.Remove(m.Sender.ID, "eth")
+			b.Send(m.Sender, "ETH subscribe stop successful!")
+		case "etc":
+			close(Subscribtion.Info[m.Sender.ID].Etc.SubsChan)
+			Subscribtion.Remove(m.Sender.ID, "etc")
+			b.Send(m.Sender, "ETC subscribe stop successful!")
+		case "btc":
+			close(Subscribtion.Info[m.Sender.ID].Btc.SubsChan)
+			Subscribtion.Remove(m.Sender.ID, "btc")
+			b.Send(m.Sender, "BTC subscribe stop successful!")
+		case "ltc":
+			close(Subscribtion.Info[m.Sender.ID].Ltc.SubsChan)
+			Subscribtion.Remove(m.Sender.ID, "ltc")
+			b.Send(m.Sender, "LTC subscribe stop successful!")
+		case "bch":
+			close(Subscribtion.Info[m.Sender.ID].Bch.SubsChan)
+			Subscribtion.Remove(m.Sender.ID, "bch")
+			b.Send(m.Sender, "BCH subscribe stop successful!")
+		case "xlm":
+			close(Subscribtion.Info[m.Sender.ID].Xlm.SubsChan)
+			Subscribtion.Remove(m.Sender.ID, "xlm")
+			b.Send(m.Sender, "XLM subscribe stop successful!")
+		default:
+			b.Send(m.Sender, "Mistake in command!")
+		}
+
 	})
 
 	b.Start()

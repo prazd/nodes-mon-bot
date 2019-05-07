@@ -1,8 +1,6 @@
 package state
 
-import (
-	"sync"
-)
+import "sync"
 
 type NodesState struct {
 	sync.Mutex
