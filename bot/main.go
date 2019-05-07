@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/keyboard"
-	"github.com/prazd/nodes_mon_bot/utils"
 	"github.com/prazd/nodes_mon_bot/subscribe"
+	"github.com/prazd/nodes_mon_bot/utils"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"path/filepath"
@@ -27,13 +27,13 @@ func ReadConfig() (*config.Config, error) {
 	defer configFile.Close()
 
 	byteValue, err := ioutil.ReadAll(configFile)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	var conf config.Config
 
-	if err = json.Unmarshal(byteValue, &conf); err != nil{
+	if err = json.Unmarshal(byteValue, &conf); err != nil {
 		return nil, err
 	}
 
@@ -52,8 +52,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	configData,err := ReadConfig()
-	if err !=nil{
+	configData, err := ReadConfig()
+	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
@@ -91,17 +91,16 @@ func main() {
 		b.Send(m.Sender, utils.IsAlive("xlm", *configData))
 	})
 
-
 	// Subscribe handlers
 
-	b.Handle("/subscribe", func(m *tb.Message){
+	b.Handle("/subscribe", func(m *tb.Message) {
 		params := strings.Split(m.Text, " ")
 
-		currencies := []string{"eth","etc","xlm","bch","btc","ltc"}
+		currencies := []string{"eth", "etc", "xlm", "bch", "btc", "ltc"}
 
 		ok := utils.Contains(params[1], currencies)
 
-		if !ok{
+		if !ok {
 			b.Send(m.Sender, "Mistake in command!")
 			return
 		}
@@ -109,7 +108,7 @@ func main() {
 		utils.StartSubscribe(params[1], *configData, b, m, &Subscribtion)
 	})
 
-	b.Handle("/stop", func(m *tb.Message){
+	b.Handle("/stop", func(m *tb.Message) {
 		params := strings.Split(m.Text, " ")
 		switch params[1] {
 		case "eth":

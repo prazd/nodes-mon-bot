@@ -4,13 +4,12 @@ import (
 	"github.com/anvie/port-scanner"
 	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/state"
+	"github.com/prazd/nodes_mon_bot/subscribe"
+	tb "gopkg.in/tucnak/telebot.v2"
+	"reflect"
 	"sync"
 	"time"
-	tb "gopkg.in/tucnak/telebot.v2"
-	"github.com/prazd/nodes_mon_bot/subscribe"
-	"reflect"
 )
-
 
 func Worker(wg *sync.WaitGroup, addr string, port int, r *state.NodesState) {
 	defer wg.Done()
@@ -83,16 +82,15 @@ func IsAlive(curr string, configData config.Config) string {
 	return message
 }
 
-
 // Subscribe logic
 
-func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *tb.Message, Subscription *subscribe.Subscription){
+func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *tb.Message, Subscription *subscribe.Subscription) {
 	key := make(chan bool)
 
 	_, ok := Subscription.Info[m.Sender.ID]
 	if ok {
 		isSubscribed := Subscription.Info[m.Sender.ID].Eth.IsSubscribed
-		if isSubscribed{
+		if isSubscribed {
 			bot.Send(m.Sender, "Already subscribed!")
 		}
 	}
@@ -117,10 +115,10 @@ func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *t
 				}
 				wg.Wait()
 
-				for _, alive := range nodesState.Result{
+				for _, alive := range nodesState.Result {
 					if !alive {
 						message := GetMessage(nodesState.Result)
-						bot.Send(m.Sender,"Subscribe message: \n" + message)
+						bot.Send(m.Sender, "Subscribe message: \n"+message)
 					}
 				}
 

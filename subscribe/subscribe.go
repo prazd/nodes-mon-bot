@@ -64,7 +64,7 @@ func (ds *Subscription) Set(key int, value chan bool, currency string) {
 	}
 }
 
-func (ds *Subscription) Remove(key int, currency string){
+func (ds *Subscription) Remove(key int, currency string) {
 	switch currency {
 
 	case "eth":
