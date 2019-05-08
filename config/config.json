@@ -5,7 +5,7 @@
   },
   "etcNodes":{
   "port":8545,
-  "addresses":["", ""]
+  "addresses":["",""]
   },
   "btcNodes":{
     "port":80,

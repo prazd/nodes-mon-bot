@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/keyboard"
-	"github.com/prazd/nodes_mon_bot/subscribe"
+	"github.com/prazd/nodes_mon_bot/subscription"
 	"github.com/prazd/nodes_mon_bot/utils"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// channels for subscribe
-	Subscription := subscribe.SubNew()
+	Subscription := subscription.SubNew()
 
 	b.Handle("/start", func(m *tb.Message) {
 		b.Send(m.Sender, "Hi!I can help you with nodes monitoring!", &tb.SendOptions{ParseMode: "Markdown"},
@@ -93,7 +93,7 @@ func main() {
 
 	// Subscribe handlers
 
-	b.Handle(&keyboard.SubscribeStatus, func(m *tb.Message) {
+	b.Handle(&keyboard.SubscriptionStatus, func(m *tb.Message) {
 		b.Send(m.Sender, utils.SubStatus(&Subscription, m.Sender.ID))
 	})
 

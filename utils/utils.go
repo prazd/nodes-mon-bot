@@ -1,14 +1,15 @@
 package utils
 
 import (
-	"github.com/anvie/port-scanner"
-	"github.com/prazd/nodes_mon_bot/config"
-	"github.com/prazd/nodes_mon_bot/state"
-	"github.com/prazd/nodes_mon_bot/subscribe"
-	tb "gopkg.in/tucnak/telebot.v2"
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/anvie/port-scanner"
+	"github.com/prazd/nodes_mon_bot/config"
+	"github.com/prazd/nodes_mon_bot/state"
+	"github.com/prazd/nodes_mon_bot/subscription"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 func Worker(wg *sync.WaitGroup, addr string, port int, r *state.NodesState) {
@@ -84,7 +85,7 @@ func IsAlive(curr string, configData config.Config) string {
 
 // Subscribe logic
 
-func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *tb.Message, Subscription *subscribe.Subscription, isSubscribed bool) {
+func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *tb.Message, Subscription *subscription.Subscription, isSubscribed bool) {
 
 	subsChan := make(chan bool)
 
@@ -101,6 +102,8 @@ func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *t
 	nodesState := state.New()
 
 	addresses, port := GetHostInfo(currency, configData)
+
+	bot.Send(m.Sender, "Subscription starts: "+currency+"!")
 
 	go func() {
 		for {
@@ -130,13 +133,13 @@ func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *t
 
 }
 
-func StopSubscribe(subsChan chan bool, Subscription *subscribe.Subscription, currency string, m *tb.Message, bot *tb.Bot) {
+func StopSubscribe(subsChan chan bool, Subscription *subscription.Subscription, currency string, m *tb.Message, bot *tb.Bot) {
 	close(subsChan)
 	Subscription.Remove(m.Sender.ID, currency)
-	bot.Send(m.Sender, currency+" subscribe stop successful!")
+	bot.Send(m.Sender, currency+" subscription stop successful!")
 }
 
-func SubStatus(Subscription *subscribe.Subscription, id int) string {
+func SubStatus(Subscription *subscription.Subscription, id int) string {
 	ethStatus := Subscription.Info[id].Eth.IsSubscribed
 	etcStatus := Subscription.Info[id].Etc.IsSubscribed
 	btcStatus := Subscription.Info[id].Btc.IsSubscribed
