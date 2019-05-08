@@ -1,28 +1,15 @@
 package config
 
+type NodeInfo struct {
+	Port      int      `json:"port"`
+	Addresses []string `json:"addresses"`
+}
+
 type Config struct {
-	EthNodes struct {
-		Port      int      `json:"port"`
-		Addresses []string `json:"addresses"`
-	} `json:"ethNodes"`
-	EtcNodes struct {
-		Port      int      `json:"port"`
-		Addresses []string `json:"addresses"`
-	} `json:"etcNodes"`
-	BtcNodes struct {
-		Port      int      `json:"port"`
-		Addresses []string `json:"addresses"`
-	} `json:"btcNodes"`
-	BchNodes struct {
-		Port      int      `json:"port"`
-		Addresses []string `json:"addresses"`
-	} `json:"bchNodes"`
-	LtcNodes struct {
-		Port      int      `json:"port"`
-		Addresses []string `json:"addresses"`
-	} `json:"ltcNodes"`
-	XlmNodes struct {
-		Port      int      `json:"port"`
-		Addresses []string `json:"addresses"`
-	} `json:"xlmNodes"`
+	EthNodes NodeInfo `json:"ethNodes"`
+	EtcNodes NodeInfo `json:"etcNodes"`
+	BtcNodes NodeInfo `json:"btcNodes"`
+	BchNodes NodeInfo `json:"bchNodes"`
+	LtcNodes NodeInfo `json:"ltcNodes"`
+	XlmNodes NodeInfo `json:"xlmNodes"`
 }

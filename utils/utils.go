@@ -84,18 +84,19 @@ func IsAlive(curr string, configData config.Config) string {
 
 // Subscribe logic
 
-func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *tb.Message, Subscription *subscribe.Subscription) {
-	key := make(chan bool)
+func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *tb.Message, Subscription *subscribe.Subscription, isSubscribed bool) {
+
+	subsChan := make(chan bool)
 
 	_, ok := Subscription.Info[m.Sender.ID]
 	if ok {
-		isSubscribed := Subscription.Info[m.Sender.ID].Eth.IsSubscribed
 		if isSubscribed {
-			bot.Send(m.Sender, "Already subscribed!")
+			bot.Send(m.Sender, "Already subscribed on "+currency+"!")
+			return
 		}
 	}
 
-	Subscription.Set(m.Sender.ID, key, currency)
+	Subscription.Set(m.Sender.ID, subsChan, currency)
 
 	nodesState := state.New()
 
@@ -104,7 +105,7 @@ func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *t
 	go func() {
 		for {
 			select {
-			case <-key:
+			case <-subsChan:
 				return
 			default:
 				var wg sync.WaitGroup
@@ -118,16 +119,54 @@ func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *t
 				for _, alive := range nodesState.Result {
 					if !alive {
 						message := GetMessage(nodesState.Result)
-						bot.Send(m.Sender, "Subscribe message: \n"+message)
+						bot.Send(m.Sender, "Currency: "+currency+"\nNodes info: \n"+message)
 					}
 				}
 
-				bot.Send(m.Sender, "All "+currency+" nodes checked")
-				time.Sleep(time.Second * 2)
+				time.Sleep(time.Second * 60)
 			}
 		}
 	}()
 
+}
+
+func StopSubscribe(subsChan chan bool, Subscription *subscribe.Subscription, currency string, m *tb.Message, bot *tb.Bot) {
+	close(subsChan)
+	Subscription.Remove(m.Sender.ID, currency)
+	bot.Send(m.Sender, currency+" subscribe stop successful!")
+}
+
+func SubStatus(Subscription *subscribe.Subscription, id int) string {
+	ethStatus := Subscription.Info[id].Eth.IsSubscribed
+	etcStatus := Subscription.Info[id].Etc.IsSubscribed
+	btcStatus := Subscription.Info[id].Btc.IsSubscribed
+	bchStatus := Subscription.Info[id].Bch.IsSubscribed
+	ltcStatus := Subscription.Info[id].Ltc.IsSubscribed
+	xlmStatus := Subscription.Info[id].Xlm.IsSubscribed
+
+	statuses := map[string]bool{
+		"eth": ethStatus,
+		"etc": etcStatus,
+		"btc": btcStatus,
+		"ltc": ltcStatus,
+		"bch": bchStatus,
+		"xlm": xlmStatus,
+	}
+
+	var message string
+
+	for currency, status := range statuses {
+		message += currency
+		switch status {
+		case true:
+			message += ": ✔"
+		case false:
+			message += ": ✖"
+		}
+		message += "\n"
+	}
+
+	return message
 }
 
 func Contains(params ...interface{}) bool {

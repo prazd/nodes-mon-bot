@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// channels for subscribe
-	Subscribtion := subscribe.SubNew()
+	Subscription := subscribe.SubNew()
 
 	b.Handle("/start", func(m *tb.Message) {
 		b.Send(m.Sender, "Hi!I can help you with nodes monitoring!", &tb.SendOptions{ParseMode: "Markdown"},
@@ -93,48 +93,77 @@ func main() {
 
 	// Subscribe handlers
 
-	b.Handle("/subscribe", func(m *tb.Message) {
+	b.Handle(&keyboard.SubscribeStatus, func(m *tb.Message) {
+		b.Send(m.Sender, utils.SubStatus(&Subscription, m.Sender.ID))
+	})
+
+	b.Handle("/sub", func(m *tb.Message) {
+
 		params := strings.Split(m.Text, " ")
 
-		currencies := []string{"eth", "etc", "xlm", "bch", "btc", "ltc"}
+		switch params[1] {
+		case "eth":
+			utils.StartSubscribe("eth", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Eth.IsSubscribed)
 
-		ok := utils.Contains(params[1], currencies)
+		case "etc":
+			utils.StartSubscribe("etc", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Etc.IsSubscribed)
 
-		if !ok {
+		case "btc":
+			utils.StartSubscribe("btc", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Btc.IsSubscribed)
+
+		case "ltc":
+			utils.StartSubscribe("ltc", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Ltc.IsSubscribed)
+
+		case "bch":
+			utils.StartSubscribe("bch", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Bch.IsSubscribed)
+
+		case "xlm":
+			utils.StartSubscribe("xlm", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Xlm.IsSubscribed)
+
+		case "all":
+			utils.StartSubscribe("eth", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Eth.IsSubscribed)
+			utils.StartSubscribe("etc", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Etc.IsSubscribed)
+			utils.StartSubscribe("btc", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Btc.IsSubscribed)
+			utils.StartSubscribe("ltc", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Ltc.IsSubscribed)
+			utils.StartSubscribe("bch", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Bch.IsSubscribed)
+			utils.StartSubscribe("xlm", *configData, b, m, &Subscription, Subscription.Info[m.Sender.ID].Xlm.IsSubscribed)
+
+		default:
 			b.Send(m.Sender, "Mistake in command!")
-			return
 		}
 
-		utils.StartSubscribe(params[1], *configData, b, m, &Subscribtion)
 	})
 
 	b.Handle("/stop", func(m *tb.Message) {
 		params := strings.Split(m.Text, " ")
 		switch params[1] {
+
 		case "eth":
-			close(Subscribtion.Info[m.Sender.ID].Eth.SubsChan)
-			Subscribtion.Remove(m.Sender.ID, "eth")
-			b.Send(m.Sender, "ETH subscribe stop successful!")
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Eth.SubsChan, &Subscription, "eth", m, b)
+
 		case "etc":
-			close(Subscribtion.Info[m.Sender.ID].Etc.SubsChan)
-			Subscribtion.Remove(m.Sender.ID, "etc")
-			b.Send(m.Sender, "ETC subscribe stop successful!")
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Etc.SubsChan, &Subscription, "etc", m, b)
+
 		case "btc":
-			close(Subscribtion.Info[m.Sender.ID].Btc.SubsChan)
-			Subscribtion.Remove(m.Sender.ID, "btc")
-			b.Send(m.Sender, "BTC subscribe stop successful!")
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Btc.SubsChan, &Subscription, "btc", m, b)
+
 		case "ltc":
-			close(Subscribtion.Info[m.Sender.ID].Ltc.SubsChan)
-			Subscribtion.Remove(m.Sender.ID, "ltc")
-			b.Send(m.Sender, "LTC subscribe stop successful!")
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Ltc.SubsChan, &Subscription, "ltc", m, b)
+
 		case "bch":
-			close(Subscribtion.Info[m.Sender.ID].Bch.SubsChan)
-			Subscribtion.Remove(m.Sender.ID, "bch")
-			b.Send(m.Sender, "BCH subscribe stop successful!")
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Bch.SubsChan, &Subscription, "bch", m, b)
+
 		case "xlm":
-			close(Subscribtion.Info[m.Sender.ID].Xlm.SubsChan)
-			Subscribtion.Remove(m.Sender.ID, "xlm")
-			b.Send(m.Sender, "XLM subscribe stop successful!")
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Xlm.SubsChan, &Subscription, "xlm", m, b)
+
+		case "all":
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Eth.SubsChan, &Subscription, "eth", m, b)
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Etc.SubsChan, &Subscription, "etc", m, b)
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Btc.SubsChan, &Subscription, "btc", m, b)
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Ltc.SubsChan, &Subscription, "ltc", m, b)
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Bch.SubsChan, &Subscription, "bch", m, b)
+			utils.StopSubscribe(Subscription.Info[m.Sender.ID].Xlm.SubsChan, &Subscription, "xlm", m, b)
+
 		default:
 			b.Send(m.Sender, "Mistake in command!")
 		}
