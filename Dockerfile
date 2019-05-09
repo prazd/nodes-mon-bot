@@ -7,10 +7,11 @@ WORKDIR /build
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git
 
-RUN go build -o bin/main .
+RUN go build -o bin/main ./bot
 
-FROM scratch
-COPY --from=builder /build/bin /app
+FROM alpine
+COPY --from=builder /build/bin /app/bin
+COPY --from=builder /build/config /config
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-CMD ["/app/main"]
+CMD ["/app/bin/main"]
