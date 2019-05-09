@@ -1,11 +1,16 @@
-FROM golang:alpine
+FROM golang:alpine as builder
 
-RUN mkdir /app
+RUN mkdir /build
+ADD . /build
+WORKDIR /build
+
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git
 
-ADD . /app
-WORKDIR /app/bot
-RUN go build -o main .
+RUN go build -o bin/main .
 
-CMD ["/app/bot/main"]
+FROM scratch
+COPY --from=builder /build/bin /app
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+CMD ["/app/main"]

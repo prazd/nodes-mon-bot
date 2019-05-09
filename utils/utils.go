@@ -8,11 +8,17 @@ import (
 	"github.com/anvie/port-scanner"
 	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/state"
-	"github.com/prazd/nodes_mon_bot/subscription"
+	"github.com/prazd/nodes_mon_bot/db"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
-func Worker(wg *sync.WaitGroup, addr string, port int, r *state.NodesState) {
+type NodesInfo struct {
+	State *state.SingleState
+	Port int
+	Addresses []string
+}
+
+func Worker(wg *sync.WaitGroup, addr string, port int, r *state.SingleState) {
 	defer wg.Done()
 	ps := portscanner.NewPortScanner(addr, 1*time.Second, 1)
 	isAlive := ps.IsOpen(port)
@@ -64,112 +70,94 @@ func GetMessage(result map[string]bool) string {
 	return message
 }
 
-func IsAlive(curr string, configData config.Config) string {
+func NodesStatus(curr string, configData config.Config) string {
 
-	nodesState := state.New()
+	nodesState := state.NewSingleState()
 
 	addresses, port := GetHostInfo(curr, configData)
 
-	var wg sync.WaitGroup
-
-	for i := 0; i < len(addresses); i++ {
-		wg.Add(1)
-		go Worker(&wg, addresses[i], port, nodesState)
-	}
-	wg.Wait()
+	RunWorkers(addresses, port, nodesState)
 
 	message := GetMessage(nodesState.Result)
 
 	return message
 }
 
-// Subscribe logic
+func RunWorkers(addresses []string, port int, state *state.SingleState){
+	var wg sync.WaitGroup
 
-func StartSubscribe(currency string, configData config.Config, bot *tb.Bot, m *tb.Message, Subscription *subscription.Subscription, isSubscribed bool) {
+	for i := 0; i < len(addresses); i++ {
+		wg.Add(1)
+		go Worker(&wg, addresses[i], port, state)
+	}
+	wg.Wait()
+}
 
-	subsChan := make(chan bool)
-
-	_, ok := Subscription.Info[m.Sender.ID]
-	if ok {
-		if isSubscribed {
-			bot.Send(m.Sender, "Already subscribed on "+currency+"!")
-			return
+func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool{
+	RunWorkers(addresses, port, state)
+	for _,j := range state.Result{
+		if j == false{
+			return false
 		}
 	}
+	return true
+}
 
-	Subscription.Set(m.Sender.ID, subsChan, currency)
+func GetAllNodes(configData config.Config) map[string]NodesInfo {
+	return map[string]NodesInfo{
+		"eth": NodesInfo{
+			State:     state.NewSingleState(),
+			Port:      configData.EthNodes.Port,
+			Addresses: configData.EthNodes.Addresses,
+		},
+		"etc": NodesInfo{
+			State:     state.NewSingleState(),
+			Port:      configData.EtcNodes.Port,
+			Addresses: configData.EtcNodes.Addresses,
+		},
+		"btc": NodesInfo{
+			State:     state.NewSingleState(),
+			Port:      configData.BtcNodes.Port,
+			Addresses: configData.BtcNodes.Addresses,
+		},
+		"ltc": NodesInfo{
+			State:     state.NewSingleState(),
+			Port:      configData.LtcNodes.Port,
+			Addresses: configData.LtcNodes.Addresses,
+		},
+		"bch": NodesInfo{
+			State:     state.NewSingleState(),
+			Port:      configData.BchNodes.Port,
+			Addresses: configData.BchNodes.Addresses,
+		},
+		"xlm": NodesInfo{
+			State:     state.NewSingleState(),
+			Port:      configData.XlmNodes.Port,
+			Addresses: configData.XlmNodes.Addresses,
+		},
+	}
+}
 
-	nodesState := state.New()
+func FullCheckOfNode(configData config.Config, bot *tb.Bot){
 
-	addresses, port := GetHostInfo(currency, configData)
+	allNodes := GetAllNodes(configData)
 
-	bot.Send(m.Sender, "Subscription starts: "+currency+"!")
-
-	go func() {
-		for {
-			select {
-			case <-subsChan:
-				return
-			default:
-				var wg sync.WaitGroup
-
-				for i := 0; i < len(addresses); i++ {
-					wg.Add(1)
-					go Worker(&wg, addresses[i], port, nodesState)
-				}
-				wg.Wait()
-
-				for _, alive := range nodesState.Result {
-					if !alive {
-						message := GetMessage(nodesState.Result)
-						bot.Send(m.Sender, "Currency: "+currency+"\nNodes info: \n"+message)
+	for {
+		for currency, nodesInfo := range allNodes {
+				up := isAllNodesUp(nodesInfo.Addresses, nodesInfo.Port, nodesInfo.State)
+				if !up {
+					ids := db.GetAllSubscribers()
+					if ids == nil{
+						continue
+					}
+					message := GetMessage(nodesInfo.State.Result)
+					for i:=0; i<len(ids); i++ {
+						bot.Send(&tb.User{ID:ids[i]},"Subscribe message:\nCurrency: " + currency +"\n"+  message)
 					}
 				}
-
-				time.Sleep(time.Second * 60)
-			}
 		}
-	}()
-
-}
-
-func StopSubscribe(subsChan chan bool, Subscription *subscription.Subscription, currency string, m *tb.Message, bot *tb.Bot) {
-	close(subsChan)
-	Subscription.Remove(m.Sender.ID, currency)
-	bot.Send(m.Sender, currency+" subscription stop successful!")
-}
-
-func SubStatus(Subscription *subscription.Subscription, id int) string {
-	ethStatus := Subscription.Info[id].Eth.IsSubscribed
-	etcStatus := Subscription.Info[id].Etc.IsSubscribed
-	btcStatus := Subscription.Info[id].Btc.IsSubscribed
-	bchStatus := Subscription.Info[id].Bch.IsSubscribed
-	ltcStatus := Subscription.Info[id].Ltc.IsSubscribed
-	xlmStatus := Subscription.Info[id].Xlm.IsSubscribed
-
-	statuses := map[string]bool{
-		"eth": ethStatus,
-		"etc": etcStatus,
-		"btc": btcStatus,
-		"ltc": ltcStatus,
-		"bch": bchStatus,
-		"xlm": xlmStatus,
+		time.Sleep(time.Second * 60)
 	}
-
-	var message string
-
-	for currency, status := range statuses {
-		message += currency
-		switch status {
-		case true:
-			message += ": ✔"
-		case false:
-			message += ": ✖"
-		}
-		message += "\n"
-	}
-
-	return message
 }
 
 func Contains(params ...interface{}) bool {
@@ -188,4 +176,19 @@ func Contains(params ...interface{}) bool {
 		}
 	}
 	return false
+}
+
+func Start(id int)(error){
+	inDb, err := db.IsInDb(id)
+	if err != nil{
+		return err
+	}
+
+	if !inDb{
+		err = db.CreateUser(id)
+		if err != nil{
+			return err
+		}
+	}
+	return nil
 }
