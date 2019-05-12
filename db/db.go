@@ -1,10 +1,11 @@
 package db
 
 import (
-	"gopkg.in/mgo.v2"
-	"github.com/prazd/nodes_mon_bot/db/schema"
-	"gopkg.in/mgo.v2/bson"
 	"os"
+
+	"github.com/prazd/nodes_mon_bot/db/schema"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -22,7 +23,7 @@ var info = mgo.DialInfo{
 	Password: password,
 }
 
-func IsInDb(id int)(bool, error){
+func IsInDb(id int) (bool, error) {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return false, err
@@ -34,14 +35,14 @@ func IsInDb(id int)(bool, error){
 	c := session.DB(database).C(collection)
 
 	err = c.Find(bson.M{"telegram_id": id}).One(&user)
-	if err != nil{
+	if err != nil {
 		return false, nil
 	}
 
 	return true, nil
 }
 
-func CreateUser(id int)(error){
+func CreateUser(id int) error {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return err
@@ -50,7 +51,7 @@ func CreateUser(id int)(error){
 
 	c := session.DB(database).C(collection)
 
-	err = c.Insert(&schema.User{Telegram_id: id,Subscription:false})
+	err = c.Insert(&schema.User{Telegram_id: id, Subscription: false})
 	if err != nil {
 		return err
 	}
@@ -58,8 +59,7 @@ func CreateUser(id int)(error){
 	return nil
 }
 
-
-func SubscribeOrUnSubscribe(id int, subscription bool) (error) {
+func SubscribeOrUnSubscribe(id int, subscription bool) error {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return err
@@ -76,8 +76,7 @@ func SubscribeOrUnSubscribe(id int, subscription bool) (error) {
 	return nil
 }
 
-
-func GetSubStatus(id int)(string, error){
+func GetSubStatus(id int) (string, error) {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return "", err
@@ -89,7 +88,7 @@ func GetSubStatus(id int)(string, error){
 	c := session.DB(database).C(collection)
 
 	err = c.Find(bson.M{"telegram_id": id}).One(&user)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 
@@ -105,7 +104,7 @@ func GetSubStatus(id int)(string, error){
 	return message, nil
 }
 
-func GetAllSubscribers()([]int){
+func GetAllSubscribers() []int {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return nil
@@ -118,11 +117,11 @@ func GetAllSubscribers()([]int){
 	c := session.DB(database).C(collection)
 
 	err = c.Find(bson.M{"subscription": true}).All(&users)
-	if err != nil{
+	if err != nil {
 		return nil
 	}
 
-	for i:=0; i<len(users); i++{
+	for i := 0; i < len(users); i++ {
 		usersId = append(usersId, users[i].Telegram_id)
 	}
 

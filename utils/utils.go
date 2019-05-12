@@ -7,21 +7,27 @@ import (
 
 	"github.com/anvie/port-scanner"
 	"github.com/prazd/nodes_mon_bot/config"
-	"github.com/prazd/nodes_mon_bot/state"
 	"github.com/prazd/nodes_mon_bot/db"
+	"github.com/prazd/nodes_mon_bot/state"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 type NodesInfo struct {
-	State *state.SingleState
-	Port int
+	State     *state.SingleState
+	Port      int
 	Addresses []string
 }
 
 func Worker(wg *sync.WaitGroup, addr string, port int, r *state.SingleState) {
 	defer wg.Done()
-	ps := portscanner.NewPortScanner(addr, 1*time.Second, 1)
+	ps := portscanner.NewPortScanner(addr, 3*time.Second, 1)
 	isAlive := ps.IsOpen(port)
+	if !isAlive {
+		time.Sleep(time.Second * 5)
+		secondCheck := ps.IsOpen(port)
+		r.Set(addr, secondCheck)
+		return
+	}
 	r.Set(addr, isAlive)
 }
 
@@ -83,7 +89,7 @@ func NodesStatus(curr string, configData config.Config) string {
 	return message
 }
 
-func RunWorkers(addresses []string, port int, state *state.SingleState){
+func RunWorkers(addresses []string, port int, state *state.SingleState) {
 	var wg sync.WaitGroup
 
 	for i := 0; i < len(addresses); i++ {
@@ -93,10 +99,10 @@ func RunWorkers(addresses []string, port int, state *state.SingleState){
 	wg.Wait()
 }
 
-func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool{
+func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool {
 	RunWorkers(addresses, port, state)
-	for _,j := range state.Result{
-		if j == false{
+	for _, j := range state.Result {
+		if j == false {
 			return false
 		}
 	}
@@ -105,32 +111,32 @@ func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool{
 
 func GetAllNodes(configData config.Config) map[string]NodesInfo {
 	return map[string]NodesInfo{
-		"eth": NodesInfo{
+		"ETH": NodesInfo{
 			State:     state.NewSingleState(),
 			Port:      configData.EthNodes.Port,
 			Addresses: configData.EthNodes.Addresses,
 		},
-		"etc": NodesInfo{
+		"ETC": NodesInfo{
 			State:     state.NewSingleState(),
 			Port:      configData.EtcNodes.Port,
 			Addresses: configData.EtcNodes.Addresses,
 		},
-		"btc": NodesInfo{
+		"BTC": NodesInfo{
 			State:     state.NewSingleState(),
 			Port:      configData.BtcNodes.Port,
 			Addresses: configData.BtcNodes.Addresses,
 		},
-		"ltc": NodesInfo{
+		"LTC": NodesInfo{
 			State:     state.NewSingleState(),
 			Port:      configData.LtcNodes.Port,
 			Addresses: configData.LtcNodes.Addresses,
 		},
-		"bch": NodesInfo{
+		"BCH": NodesInfo{
 			State:     state.NewSingleState(),
 			Port:      configData.BchNodes.Port,
 			Addresses: configData.BchNodes.Addresses,
 		},
-		"xlm": NodesInfo{
+		"XLM": NodesInfo{
 			State:     state.NewSingleState(),
 			Port:      configData.XlmNodes.Port,
 			Addresses: configData.XlmNodes.Addresses,
@@ -138,23 +144,23 @@ func GetAllNodes(configData config.Config) map[string]NodesInfo {
 	}
 }
 
-func FullCheckOfNode(configData config.Config, bot *tb.Bot){
+func FullCheckOfNode(configData config.Config, bot *tb.Bot) {
 
 	allNodes := GetAllNodes(configData)
 
 	for {
 		for currency, nodesInfo := range allNodes {
-				up := isAllNodesUp(nodesInfo.Addresses, nodesInfo.Port, nodesInfo.State)
-				if !up {
-					ids := db.GetAllSubscribers()
-					if ids == nil{
-						continue
-					}
-					message := GetMessage(nodesInfo.State.Result)
-					for i:=0; i<len(ids); i++ {
-						bot.Send(&tb.User{ID:ids[i]},"Subscribe message:\nCurrency: " + currency +"\n"+  message)
-					}
+			up := isAllNodesUp(nodesInfo.Addresses, nodesInfo.Port, nodesInfo.State)
+			if !up {
+				ids := db.GetAllSubscribers()
+				if ids == nil {
+					continue
 				}
+				message := GetMessage(nodesInfo.State.Result)
+				for i := 0; i < len(ids); i++ {
+					bot.Send(&tb.User{ID: ids[i]}, "Subscribe message:\nCurrency: "+currency+"\n"+message)
+				}
+			}
 		}
 		time.Sleep(time.Second * 60)
 	}
@@ -178,15 +184,15 @@ func Contains(params ...interface{}) bool {
 	return false
 }
 
-func Start(id int)(error){
+func Start(id int) error {
 	inDb, err := db.IsInDb(id)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
-	if !inDb{
+	if !inDb {
 		err = db.CreateUser(id)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
