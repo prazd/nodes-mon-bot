@@ -4,7 +4,6 @@ import (
 	"sync"
 )
 
-
 type SingleState struct {
 	sync.Mutex
 	Result map[string]bool

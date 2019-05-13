@@ -10,10 +10,10 @@ import (
 	"github.com/prazd/nodes_mon_bot/keyboard"
 	"github.com/prazd/nodes_mon_bot/utils"
 
+	"github.com/prazd/nodes_mon_bot/db"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"io/ioutil"
 	"path/filepath"
-	"github.com/prazd/nodes_mon_bot/db"
 	"strings"
 )
 
@@ -63,9 +63,9 @@ func main() {
 
 	b.Handle("/start", func(m *tb.Message) {
 		err := utils.CheckUser(m.Sender.ID)
-		if err != nil{
+		if err != nil {
 			log.Println(err)
-			b.Send(m.Sender,"Problems...")
+			b.Send(m.Sender, "Problems...")
 			return
 		}
 		b.Send(m.Sender, "Hi!I can help you with nodes monitoring!", &tb.SendOptions{ParseMode: "Markdown"},
@@ -101,7 +101,7 @@ func main() {
 
 	b.Handle(&keyboard.SubscriptionStatus, func(m *tb.Message) {
 		message, err := db.GetSubStatus(m.Sender.ID)
-		if err != nil{
+		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
 		}
@@ -110,17 +110,17 @@ func main() {
 
 	b.Handle("/sub", func(m *tb.Message) {
 		err := db.SubscribeOrUnSubscribe(m.Sender.ID, true)
-		if err != nil{
+		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
 		}
-		b.Send(m.Sender, "Successfully **subscribed** on every currency!",  &tb.SendOptions{ParseMode: "Markdown"})
+		b.Send(m.Sender, "Successfully **subscribed** on every currency!", &tb.SendOptions{ParseMode: "Markdown"})
 
 	})
 
 	b.Handle("/stop", func(m *tb.Message) {
 		err := db.SubscribeOrUnSubscribe(m.Sender.ID, false)
-		if err != nil{
+		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
 		}
@@ -132,11 +132,12 @@ func main() {
 	b.Handle("/eth", func(m *tb.Message) {
 		params := strings.Split(m.Text, " ")
 		message, err := utils.GetBalances("eth", params[1], *configData)
-		if err != nil{
-			b.Send(m.Sender, "Please send /start firstly")
+		if err != nil {
+			b.Send(m.Sender, "Problems...")
 			return
 		}
-		b.Send(m.Sender, message, &tb.SendOptions{ParseMode: "Markdown"})
+
+		b.Send(m.Sender, message)
 	})
 
 	b.Start()

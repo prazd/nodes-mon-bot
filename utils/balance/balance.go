@@ -4,12 +4,11 @@ import (
 	"github.com/onrik/ethrpc"
 )
 
-
 type Balances map[string]string
 
-func GetFormatMessage(balances Balances) string{
+func GetFormatMessage(balances Balances) string {
 	var message string
-	for endpoint, balance := range balances{
+	for endpoint, balance := range balances {
 		message += endpoint + ": " + balance + "\n"
 	}
 	return message
@@ -22,8 +21,8 @@ func GetEthBalance(address string, endpoints []string) (Balances, error) {
 	// infura balance
 	infuraInstance := ethrpc.New("https://mainnet.infura.io")
 
-	infuraResponse, err := infuraInstance.EthGetBalance(address,"latest")
-	if err != nil{
+	infuraResponse, err := infuraInstance.EthGetBalance(address, "latest")
+	if err != nil {
 		return nil, err
 	}
 
@@ -33,10 +32,10 @@ func GetEthBalance(address string, endpoints []string) (Balances, error) {
 
 	// check other nodes
 	for _, ip := range endpoints {
-		instance = ethrpc.New(ip)
+		instance = ethrpc.New("http://" + ip + ":8545")
 
 		response, err := instance.EthGetBalance(address, "latest")
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 
@@ -45,4 +44,3 @@ func GetEthBalance(address string, endpoints []string) (Balances, error) {
 
 	return balances, nil
 }
-
