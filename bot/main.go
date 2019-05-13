@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"github.com/prazd/nodes_mon_bot/db"
+	"strings"
 )
 
 func ReadConfig() (*config.Config, error) {
@@ -124,6 +125,18 @@ func main() {
 			return
 		}
 		b.Send(m.Sender, "Successfully **unsubscribed** on every currency!", &tb.SendOptions{ParseMode: "Markdown"})
+	})
+
+	// Balance handlers
+
+	b.Handle("/eth", func(m *tb.Message) {
+		params := strings.Split(m.Text, " ")
+		message, err := utils.GetBalances("eth", params[1], *configData)
+		if err != nil{
+			b.Send(m.Sender, "Please send /start firstly")
+			return
+		}
+		b.Send(m.Sender, message, &tb.SendOptions{ParseMode: "Markdown"})
 	})
 
 	b.Start()

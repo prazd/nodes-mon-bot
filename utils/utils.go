@@ -10,6 +10,7 @@ import (
 	"github.com/prazd/nodes_mon_bot/db"
 	"github.com/prazd/nodes_mon_bot/state"
 	tb "gopkg.in/tucnak/telebot.v2"
+	"github.com/prazd/nodes_mon_bot/utils/balance"
 )
 
 type NodesInfo struct {
@@ -197,4 +198,20 @@ func CheckUser(id int) error {
 		}
 	}
 	return nil
+}
+
+func GetBalances(currency string, address string, configData config.Config)(string, error){
+	switch currency {
+	case "eth":
+		ethEndpoints := configData.EthNodes.Addresses
+
+		balances, err := balance.GetEthBalance(address, ethEndpoints)
+		if err != nil{
+			return "", nil
+		}
+
+		message := balance.GetFormatMessage(balances)
+
+		return message, nil
+	}
 }
