@@ -60,10 +60,8 @@ func main() {
 
 	go utils.FullCheckOfNode(*configData, b)
 
-	//Subscription := subscription.SubNew()
-
 	b.Handle("/start", func(m *tb.Message) {
-		err := utils.Start(m.Sender.ID)
+		err := utils.CheckUser(m.Sender.ID)
 		if err != nil{
 			log.Println(err)
 			b.Send(m.Sender,"Problems...")
@@ -75,27 +73,27 @@ func main() {
 
 	// Main handlers
 	b.Handle(&keyboard.EthButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.NodesStatus("eth", *configData))
+		b.Send(m.Sender, utils.GetMessageOfNodesState("eth", *configData))
 	})
 
 	b.Handle(&keyboard.EtcButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.NodesStatus("etc", *configData))
+		b.Send(m.Sender, utils.GetMessageOfNodesState("etc", *configData))
 	})
 
 	b.Handle(&keyboard.BtcButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.NodesStatus("btc", *configData))
+		b.Send(m.Sender, utils.GetMessageOfNodesState("btc", *configData))
 	})
 
 	b.Handle(&keyboard.BchButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.NodesStatus("bch", *configData))
+		b.Send(m.Sender, utils.GetMessageOfNodesState("bch", *configData))
 	})
 
 	b.Handle(&keyboard.LtcButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.NodesStatus("ltc", *configData))
+		b.Send(m.Sender, utils.GetMessageOfNodesState("ltc", *configData))
 	})
 
 	b.Handle(&keyboard.XlmButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.NodesStatus("xlm", *configData))
+		b.Send(m.Sender, utils.GetMessageOfNodesState("xlm", *configData))
 	})
 
 	// Subscribe handlers

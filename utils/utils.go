@@ -60,7 +60,7 @@ func GetHostInfo(curr string, configData config.Config) ([]string, int) {
 	return addresses, port
 }
 
-func GetMessage(result map[string]bool) string {
+func GetMessageWithResults(result map[string]bool) string {
 	var message string
 	for address, status := range result {
 		message += address
@@ -76,7 +76,7 @@ func GetMessage(result map[string]bool) string {
 	return message
 }
 
-func NodesStatus(curr string, configData config.Config) string {
+func GetMessageOfNodesState(curr string, configData config.Config) string {
 
 	nodesState := state.NewSingleState()
 
@@ -84,7 +84,7 @@ func NodesStatus(curr string, configData config.Config) string {
 
 	RunWorkers(addresses, port, nodesState)
 
-	message := GetMessage(nodesState.Result)
+	message := GetMessageWithResults(nodesState.Result)
 
 	return message
 }
@@ -109,7 +109,7 @@ func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool {
 	return true
 }
 
-func GetAllNodes(configData config.Config) map[string]NodesInfo {
+func GetAllNodesFromConfig(configData config.Config) map[string]NodesInfo {
 	return map[string]NodesInfo{
 		"ETH": NodesInfo{
 			State:     state.NewSingleState(),
@@ -146,7 +146,7 @@ func GetAllNodes(configData config.Config) map[string]NodesInfo {
 
 func FullCheckOfNode(configData config.Config, bot *tb.Bot) {
 
-	allNodes := GetAllNodes(configData)
+	allNodes := GetAllNodesFromConfig(configData)
 
 	for {
 		for currency, nodesInfo := range allNodes {
@@ -156,7 +156,7 @@ func FullCheckOfNode(configData config.Config, bot *tb.Bot) {
 				if ids == nil {
 					continue
 				}
-				message := GetMessage(nodesInfo.State.Result)
+				message := GetMessageWithResults(nodesInfo.State.Result)
 				for i := 0; i < len(ids); i++ {
 					bot.Send(&tb.User{ID: ids[i]}, "Subscribe message:\nCurrency: "+currency+"\n"+message)
 				}
@@ -184,7 +184,7 @@ func Contains(params ...interface{}) bool {
 	return false
 }
 
-func Start(id int) error {
+func CheckUser(id int) error {
 	inDb, err := db.IsInDb(id)
 	if err != nil {
 		return err
