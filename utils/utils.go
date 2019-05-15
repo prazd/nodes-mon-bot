@@ -212,6 +212,14 @@ func GetBalances(currency string, address string, configData config.Config) (str
 			return "", err
 		}
 		result = balance.GetFormatMessage(balances)
+	case "etc":
+		etcEndpoints := configData.EtcNodes.Addresses
+
+		balances, err := balance.GetEtcBalance(address, etcEndpoints)
+		if err != nil {
+			return "", err
+		}
+		result = balance.GetFormatMessage(balances)
 	}
 
 	return result, nil

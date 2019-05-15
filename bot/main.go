@@ -140,5 +140,16 @@ func main() {
 		b.Send(m.Sender, message)
 	})
 
+	b.Handle("/etc", func(m *tb.Message) {
+		params := strings.Split(m.Text, " ")
+		message, err := utils.GetBalances("etc", params[1], *configData)
+		if err != nil {
+			b.Send(m.Sender, "Problems...")
+			return
+		}
+
+		b.Send(m.Sender, message)
+	})
+
 	b.Start()
 }
