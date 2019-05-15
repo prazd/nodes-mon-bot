@@ -127,22 +127,19 @@ func main() {
 		b.Send(m.Sender, "Successfully **unsubscribed** on every currency!", &tb.SendOptions{ParseMode: "Markdown"})
 	})
 
-	// Balance handlers
+	// Balance handler
 
-	b.Handle("/eth", func(m *tb.Message) {
+	b.Handle("/balance", func(m *tb.Message) {
 		params := strings.Split(m.Text, " ")
-		message, err := utils.GetBalances("eth", params[1], *configData)
-		if err != nil {
-			b.Send(m.Sender, "Problems...")
+		if len(params) < 3{
+			b.Send(m.Sender, "Error!")
 			return
 		}
 
-		b.Send(m.Sender, message)
-	})
+		currency := params[1]
+		address := params[2]
 
-	b.Handle("/etc", func(m *tb.Message) {
-		params := strings.Split(m.Text, " ")
-		message, err := utils.GetBalances("etc", params[1], *configData)
+		message, err := utils.GetBalances(currency, address, *configData)
 		if err != nil {
 			b.Send(m.Sender, "Problems...")
 			return

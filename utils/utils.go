@@ -201,26 +201,49 @@ func CheckUser(id int) error {
 }
 
 func GetBalances(currency string, address string, configData config.Config) (string, error) {
-	var result string
+
+	var balances balance.Balances
+	var err error
 
 	switch currency {
+
 	case "eth":
-		ethEndpoints := configData.EthNodes.Addresses
-
-		balances, err := balance.GetEthBalance(address, ethEndpoints)
+		balances, err = balance.GetEthBalance(address, configData.EthNodes.Addresses)
 		if err != nil {
 			return "", err
 		}
-		result = balance.GetFormatMessage(balances)
+
 	case "etc":
-		etcEndpoints := configData.EtcNodes.Addresses
-
-		balances, err := balance.GetEtcBalance(address, etcEndpoints)
+		balances, err = balance.GetEtcBalance(address, configData.EtcNodes.Addresses)
 		if err != nil {
 			return "", err
 		}
-		result = balance.GetFormatMessage(balances)
+
+	case "btc":
+		balances, err = balance.GetBtcBalance(address, configData.BtcNodes.Addresses)
+		if err != nil {
+			return "", err
+		}
+
+	case "ltc":
+		balances, err = balance.GetLtcBalance(address, configData.LtcNodes.Addresses)
+		if err != nil {
+			return "", err
+		}
+
+	case "bch":
+		balances, err = balance.GetBchBalance(address, configData.BchNodes.Addresses)
+		if err != nil {
+			return "", err
+		}
+	case "xlm":
+		balances, err = balance.GetXlmBalance(address, configData.XlmNodes.Addresses)
+		if err != nil {
+			return "", err
+		}
 	}
+
+	result := balance.GetFormatMessage(balances)
 
 	return result, nil
 }
