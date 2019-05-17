@@ -4,45 +4,16 @@ import (
 	"log"
 	"os"
 	"time"
-
-	"encoding/json"
-	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/keyboard"
 	"github.com/prazd/nodes_mon_bot/utils"
 
 	"github.com/prazd/nodes_mon_bot/db"
 	tb "gopkg.in/tucnak/telebot.v2"
-	"io/ioutil"
-	"path/filepath"
+
 	"strings"
 )
 
-func ReadConfig() (*config.Config, error) {
-
-	defaultConfigPath, _ := filepath.Abs("../config/config.json")
-	configFile, err := os.Open(defaultConfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	defer configFile.Close()
-
-	byteValue, err := ioutil.ReadAll(configFile)
-	if err != nil {
-		return nil, err
-	}
-
-	var conf config.Config
-
-	if err = json.Unmarshal(byteValue, &conf); err != nil {
-		return nil, err
-	}
-
-	return &conf, nil
-}
-
 func main() {
-
 	b, err := tb.NewBot(tb.Settings{
 		Token:  os.Getenv("token"),
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
@@ -53,13 +24,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	configData, err := ReadConfig()
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	go utils.FullCheckOfNode(*configData, b)
+	go utils.FullCheckOfNode(b)
 
 	b.Handle("/start", func(m *tb.Message) {
 		err := utils.CheckUser(m.Sender.ID)
@@ -74,27 +39,57 @@ func main() {
 
 	// Main handlers
 	b.Handle(&keyboard.EthButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.GetMessageOfNodesState("eth", *configData))
+		message,err := utils.GetMessageOfNodesState("eth")
+		if err != nil {
+			b.Send(m.Sender, "Please send /start firstly")
+			return
+		}
+		b.Send(m.Sender, message)
 	})
 
 	b.Handle(&keyboard.EtcButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.GetMessageOfNodesState("etc", *configData))
+		message,err := utils.GetMessageOfNodesState("etc")
+		if err != nil {
+			b.Send(m.Sender, "Please send /start firstly")
+			return
+		}
+		b.Send(m.Sender, message)
 	})
 
 	b.Handle(&keyboard.BtcButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.GetMessageOfNodesState("btc", *configData))
+		message,err := utils.GetMessageOfNodesState("btc")
+		if err != nil {
+			b.Send(m.Sender, "Please send /start firstly")
+			return
+		}
+		b.Send(m.Sender, message)
 	})
 
 	b.Handle(&keyboard.BchButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.GetMessageOfNodesState("bch", *configData))
+		message,err := utils.GetMessageOfNodesState("bch")
+		if err != nil {
+			b.Send(m.Sender, "Please send /start firstly")
+			return
+		}
+		b.Send(m.Sender, message)
 	})
 
 	b.Handle(&keyboard.LtcButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.GetMessageOfNodesState("ltc", *configData))
+		message,err := utils.GetMessageOfNodesState("Ltc")
+		if err != nil {
+			b.Send(m.Sender, "Please send /start firstly")
+			return
+		}
+		b.Send(m.Sender, message)
 	})
 
 	b.Handle(&keyboard.XlmButton, func(m *tb.Message) {
-		b.Send(m.Sender, utils.GetMessageOfNodesState("xlm", *configData))
+		message,err := utils.GetMessageOfNodesState("xlm")
+		if err != nil {
+			b.Send(m.Sender, "Please send /start firstly")
+			return
+		}
+		b.Send(m.Sender, message)
 	})
 
 	// Subscribe handlers
@@ -139,7 +134,7 @@ func main() {
 		currency := params[1]
 		address := params[2]
 
-		message, err := utils.GetBalances(currency, address, *configData)
+		message, err := utils.GetBalances(currency, address)
 		if err != nil {
 			b.Send(m.Sender, "Problems...")
 			return

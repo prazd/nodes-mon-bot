@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/anvie/port-scanner"
-	"github.com/prazd/nodes_mon_bot/config"
 	"github.com/prazd/nodes_mon_bot/db"
 	"github.com/prazd/nodes_mon_bot/state"
 	"github.com/prazd/nodes_mon_bot/utils/balance"
 	tb "gopkg.in/tucnak/telebot.v2"
+	"log"
 )
 
 type NodesInfo struct {
@@ -32,33 +32,19 @@ func Worker(wg *sync.WaitGroup, addr string, port int, r *state.SingleState) {
 	r.Set(addr, isAlive)
 }
 
-func GetHostInfo(curr string, configData config.Config) ([]string, int) {
+func GetHostInfo(currency string) ([]string, int, error) {
 
-	var addresses []string
-	var port int
-
-	switch curr {
-	case "eth":
-		addresses = configData.EthNodes.Addresses
-		port = configData.EthNodes.Port
-	case "etc":
-		addresses = configData.EtcNodes.Addresses
-		port = configData.EtcNodes.Port
-	case "btc":
-		addresses = configData.BtcNodes.Addresses
-		port = configData.BtcNodes.Port
-	case "bch":
-		addresses = configData.BchNodes.Addresses
-		port = configData.BchNodes.Port
-	case "ltc":
-		addresses = configData.LtcNodes.Addresses
-		port = configData.LtcNodes.Port
-	case "xlm":
-		addresses = configData.XlmNodes.Addresses
-		port = configData.XlmNodes.Port
+	addresses, err := db.GetAddresses(currency)
+	if err != nil{
+		return nil, 0, err
 	}
 
-	return addresses, port
+	port, err := db.GetPort(currency)
+	if err != nil{
+		return nil, 0, err
+	}
+
+	return addresses, port, nil
 }
 
 func GetMessageWithResults(result map[string]bool) string {
@@ -77,17 +63,20 @@ func GetMessageWithResults(result map[string]bool) string {
 	return message
 }
 
-func GetMessageOfNodesState(curr string, configData config.Config) string {
+func GetMessageOfNodesState(currency string) (string, error) {
 
 	nodesState := state.NewSingleState()
 
-	addresses, port := GetHostInfo(curr, configData)
+	addresses, port, err := GetHostInfo(currency)
+	if err != nil{
+		return "",err
+	}
 
 	RunWorkers(addresses, port, nodesState)
 
 	message := GetMessageWithResults(nodesState.Result)
 
-	return message
+	return message, nil
 }
 
 func RunWorkers(addresses []string, port int, state *state.SingleState) {
@@ -110,44 +99,53 @@ func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool {
 	return true
 }
 
-func GetAllNodesFromConfig(configData config.Config) map[string]NodesInfo {
+func GetAllNodesFromDB() (map[string]NodesInfo,error) {
+
+	allEntrys,err := db.GetAllNodesEntrys()
+	if err != nil{
+		return nil, err
+	}
+
 	return map[string]NodesInfo{
 		"ETH": NodesInfo{
 			State:     state.NewSingleState(),
-			Port:      configData.EthNodes.Port,
-			Addresses: configData.EthNodes.Addresses,
+			Port:      allEntrys["eth"].Port,
+			Addresses: allEntrys["eth"].Addresses,
 		},
 		"ETC": NodesInfo{
 			State:     state.NewSingleState(),
-			Port:      configData.EtcNodes.Port,
-			Addresses: configData.EtcNodes.Addresses,
+			Port:      allEntrys["etc"].Port,
+			Addresses: allEntrys["etc"].Addresses,
 		},
 		"BTC": NodesInfo{
 			State:     state.NewSingleState(),
-			Port:      configData.BtcNodes.Port,
-			Addresses: configData.BtcNodes.Addresses,
+			Port:      allEntrys["btc"].Port,
+			Addresses: allEntrys["btc"].Addresses,
 		},
 		"LTC": NodesInfo{
-			State:     state.NewSingleState(),
-			Port:      configData.LtcNodes.Port,
-			Addresses: configData.LtcNodes.Addresses,
+			State:      state.NewSingleState(),
+			Port:       allEntrys["ltc"].Port,
+			Addresses:  allEntrys["ltc"].Addresses,
 		},
 		"BCH": NodesInfo{
 			State:     state.NewSingleState(),
-			Port:      configData.BchNodes.Port,
-			Addresses: configData.BchNodes.Addresses,
+			Port:       allEntrys["bch"].Port,
+			Addresses:  allEntrys["bch"].Addresses,
 		},
 		"XLM": NodesInfo{
 			State:     state.NewSingleState(),
-			Port:      configData.XlmNodes.Port,
-			Addresses: configData.XlmNodes.Addresses,
+			Port:       allEntrys["xlm"].Port,
+			Addresses:  allEntrys["xlm"].Addresses,
 		},
-	}
+	}, nil
 }
 
-func FullCheckOfNode(configData config.Config, bot *tb.Bot) {
+func FullCheckOfNode(bot *tb.Bot) {
 
-	allNodes := GetAllNodesFromConfig(configData)
+	allNodes, err := GetAllNodesFromDB()
+	if err != nil{
+		log.Println(err)
+	}
 
 	for {
 		for currency, nodesInfo := range allNodes {
@@ -200,48 +198,72 @@ func CheckUser(id int) error {
 	return nil
 }
 
-func GetBalances(currency string, address string, configData config.Config) (string, error) {
+func GetBalances(currency string, address string) (string, error) {
 
 	var balances balance.Balances
-	var err error
 
 	switch currency {
+		case "eth":
+			endpoints, err := db.GetAddresses("eth")
+			if err != nil {
+				return "", err
+			}
 
-	case "eth":
-		balances, err = balance.GetEthBalance(address, configData.EthNodes.Addresses)
-		if err != nil {
-			return "", err
-		}
+			balances, err = balance.GetEthBalance(address, endpoints)
+			if err != nil {
+				return "", err
+			}
 
-	case "etc":
-		balances, err = balance.GetEtcBalance(address, configData.EtcNodes.Addresses)
-		if err != nil {
-			return "", err
-		}
+		case "etc":
+			endpoints, err := db.GetAddresses("etc")
+			if err != nil {
+				return "", err
+			}
+			balances, err = balance.GetEtcBalance(address, endpoints)
+			if err != nil {
+				return "", err
+			}
 
-	case "btc":
-		balances, err = balance.GetBtcBalance(address, configData.BtcNodes.Addresses)
-		if err != nil {
-			return "", err
-		}
+		case "btc":
+			endpoints, err := db.GetAddresses("btc")
+			if err != nil {
+				return "", err
+			}
 
-	case "ltc":
-		balances, err = balance.GetLtcBalance(address, configData.LtcNodes.Addresses)
-		if err != nil {
-			return "", err
-		}
+			balances, err = balance.GetBtcBalance(address, endpoints)
+			if err != nil {
+				return "", err
+			}
 
-	case "bch":
-		balances, err = balance.GetBchBalance(address, configData.BchNodes.Addresses)
-		if err != nil {
-			return "", err
+		case "ltc":
+			endpoints, err := db.GetAddresses("ltc")
+			if err != nil {
+				return "", err
+			}
+			balances, err = balance.GetLtcBalance(address, endpoints)
+			if err != nil {
+				return "", err
+			}
+
+		case "bch":
+			endpoints, err := db.GetAddresses("bch")
+			if err != nil {
+				return "", err
+			}
+			balances, err = balance.GetBchBalance(address,endpoints)
+			if err != nil {
+				return "", err
+			}
+		case "xlm":
+			endpoints, err := db.GetAddresses("xlm")
+			if err != nil {
+				return "", err
+			}
+			balances, err = balance.GetXlmBalance(address, endpoints)
+			if err != nil {
+				return "", err
+			}
 		}
-	case "xlm":
-		balances, err = balance.GetXlmBalance(address, configData.XlmNodes.Addresses)
-		if err != nil {
-			return "", err
-		}
-	}
 
 	result := balance.GetFormatMessage(balances)
 

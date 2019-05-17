@@ -6,6 +6,8 @@ import (
 	"github.com/prazd/nodes_mon_bot/db/schema"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/prazd/nodes_mon_bot/config"
+	"regexp"
 )
 
 var (
@@ -13,7 +15,8 @@ var (
 	database   = os.Getenv("DB")
 	username   = os.Getenv("USER")
 	password   = os.Getenv("PASS")
-	collection = os.Getenv("COLLECTION")
+	user_collection = os.Getenv("USER_COLL")
+	endpoints_collection =  os.Getenv("ENPOINTS_COLL")
 )
 
 var info = mgo.DialInfo{
@@ -32,7 +35,7 @@ func IsInDb(id int) (bool, error) {
 
 	var user schema.User
 
-	c := session.DB(database).C(collection)
+	c := session.DB(database).C(user_collection)
 
 	err = c.Find(bson.M{"telegram_id": id}).One(&user)
 	if err != nil {
@@ -49,7 +52,7 @@ func CreateUser(id int) error {
 	}
 	defer session.Close()
 
-	c := session.DB(database).C(collection)
+	c := session.DB(database).C(user_collection)
 
 	err = c.Insert(&schema.User{Telegram_id: id, Subscription: false})
 	if err != nil {
@@ -66,7 +69,7 @@ func SubscribeOrUnSubscribe(id int, subscription bool) error {
 	}
 	defer session.Close()
 
-	c := session.DB(database).C(collection)
+	c := session.DB(database).C(user_collection)
 
 	err = c.Update(bson.M{"telegram_id": id}, bson.M{"$set": bson.M{"subscription": subscription}})
 	if err != nil {
@@ -85,7 +88,7 @@ func GetSubStatus(id int) (string, error) {
 
 	var user schema.User
 
-	c := session.DB(database).C(collection)
+	c := session.DB(database).C(user_collection)
 
 	err = c.Find(bson.M{"telegram_id": id}).One(&user)
 	if err != nil {
@@ -114,7 +117,7 @@ func GetAllSubscribers() []int {
 	var users []schema.User
 	var usersId []int
 
-	c := session.DB(database).C(collection)
+	c := session.DB(database).C(user_collection)
 
 	err = c.Find(bson.M{"subscription": true}).All(&users)
 	if err != nil {
@@ -126,4 +129,85 @@ func GetAllSubscribers() []int {
 	}
 
 	return usersId
+}
+
+func GetAddresses(currency string)([]string, error){
+	session, err := mgo.DialWithInfo(&info)
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+
+	var entry config.NodeInfo
+
+	c := session.DB(database).C(endpoints_collection)
+
+	err = c.Find(bson.M{"currency": currency}).One(&entry)
+	if err != nil {
+		return nil, err
+	}
+
+	re := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
+
+	for i:=0; i<len(entry.Addresses);i++{
+			entry.Addresses[i] = re.FindString(entry.Addresses[i])
+	}
+
+
+	return entry.Addresses, nil
+}
+
+func GetPort(currency string)(int, error){
+	session, err := mgo.DialWithInfo(&info)
+	if err != nil {
+		return 0, err
+	}
+	defer session.Close()
+
+	var entry config.NodeInfo
+
+	c := session.DB(database).C(endpoints_collection)
+
+	err = c.Find(bson.M{"currency": currency}).One(&entry)
+	if err != nil {
+		return 0, err
+	}
+
+	return entry.Port, nil
+}
+
+func GetAllNodesEntrys()(map[string]config.NodeInfo, error){
+	session, err := mgo.DialWithInfo(&info)
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+
+	re := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
+
+	var entrys []config.NodeInfo
+
+	c := session.DB(database).C(endpoints_collection)
+
+	err = c.Find(nil).All(&entrys)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, keyEntry := range entrys {
+		for i:=0;i<len(keyEntry.Addresses);i++{
+			keyEntry.Addresses[i] = re.FindString(keyEntry.Addresses[i])
+		}
+	}
+
+	result := map[string]config.NodeInfo{
+		"btc": entrys[0],
+		"eth": entrys[1],
+		"etc": entrys[2],
+		"bch": entrys[3],
+		"ltc": entrys[4],
+		"xlm": entrys[5],
+	}
+
+	return result, nil
 }
