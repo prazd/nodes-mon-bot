@@ -16,7 +16,7 @@ var (
 	username   = os.Getenv("USER")
 	password   = os.Getenv("PASS")
 	user_collection = os.Getenv("USER_COLL")
-	endpoints_collection =  os.Getenv("ENPOINTS_COLL")
+	endpoints_collection =  os.Getenv("ENDPOINTS_COLL")
 )
 
 var info = mgo.DialInfo{
