@@ -301,11 +301,23 @@ func GetApiBalance(currency, address string)(string , error){
 	}
 
 	if Contains(currency, btc){
+
+		type BTC struct {
+			Balance string `json:"balance"`
+		}
+
+		var btc BTC
+
 		balance, err := req.Get(endpoint + address)
 		if err != nil{
 			return "", err
 		}
-		return balance.String(), nil
+
+		err = balance.ToJSON(&btc)
+		if err != nil{
+			return "", err
+		}
+		return btc.Balance, nil
 
 	}else if Contains(currency, eth){
 		var ethClient = ethrpc.New(endpoint)

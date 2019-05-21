@@ -123,7 +123,6 @@ func main() {
 	})
 
 	// Balance handler
-
 	b.Handle("/balance", func(m *tb.Message) {
 		params := strings.Split(m.Text, " ")
 		if len(params) < 3{
@@ -154,8 +153,6 @@ func main() {
 
 		b.Send(m.Sender, message)
 	})
-
-
 
 	b.Start()
 }
