@@ -6,7 +6,6 @@ import (
 	"github.com/prazd/nodes_mon_bot/db/schema"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/prazd/nodes_mon_bot/config"
 	"regexp"
 )
 
@@ -17,6 +16,7 @@ var (
 	password   = os.Getenv("PASS")
 	user_collection = os.Getenv("USER_COLL")
 	endpoints_collection =  os.Getenv("ENDPOINTS_COLL")
+	apis_collection = os.Getenv("API_COLL")
 )
 
 var info = mgo.DialInfo{
@@ -138,7 +138,7 @@ func GetAddresses(currency string)([]string, error){
 	}
 	defer session.Close()
 
-	var entry config.NodeInfo
+	var entry schema.NodeInfo
 
 	c := session.DB(database).C(endpoints_collection)
 
@@ -164,7 +164,7 @@ func GetPort(currency string)(int, error){
 	}
 	defer session.Close()
 
-	var entry config.NodeInfo
+	var entry schema.NodeInfo
 
 	c := session.DB(database).C(endpoints_collection)
 
@@ -176,7 +176,7 @@ func GetPort(currency string)(int, error){
 	return entry.Port, nil
 }
 
-func GetAllNodesEntrys()(map[string]config.NodeInfo, error){
+func GetAllNodesEntrys()(map[string]schema.NodeInfo, error){
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return nil, err
@@ -185,7 +185,7 @@ func GetAllNodesEntrys()(map[string]config.NodeInfo, error){
 
 	re := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
 
-	var entrys []config.NodeInfo
+	var entrys []schema.NodeInfo
 
 	c := session.DB(database).C(endpoints_collection)
 
@@ -200,7 +200,7 @@ func GetAllNodesEntrys()(map[string]config.NodeInfo, error){
 		}
 	}
 
-	result := map[string]config.NodeInfo{
+	result := map[string]schema.NodeInfo{
 		"btc": entrys[0],
 		"eth": entrys[1],
 		"etc": entrys[2],
@@ -211,3 +211,24 @@ func GetAllNodesEntrys()(map[string]config.NodeInfo, error){
 
 	return result, nil
 }
+
+func GetApiEndpoint(currency string)(string, error){
+	session, err := mgo.DialWithInfo(&info)
+	if err != nil {
+		return "", err
+	}
+	defer session.Close()
+
+	var entry schema.NodesApi
+
+	c := session.DB(database).C(apis_collection)
+
+	err = c.Find(bson.M{"currency": currency}).One(&entry)
+	if err != nil {
+		return "", err
+	}
+
+	return entry.Endpoint, nil
+}
+
+

@@ -239,3 +239,4 @@ func GetXlmBalance(address string, endpoints []string) (Balances, error){
 
 	return balances, nil
 }
+

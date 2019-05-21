@@ -4,3 +4,16 @@ type User struct {
 	Telegram_id  int  `json:"telegram_id"`
 	Subscription bool `json:"subscription"`
 }
+
+type NodeInfo struct {
+	Port      int      `json:"port"`
+	Addresses []string `json:"addresses"`
+	Currency string `json:"currency"`
+}
+
+type NodesApi struct {
+	Currency string `json:"currency"`
+	Endpoint string `json:"endpoint"`
+}
+
+

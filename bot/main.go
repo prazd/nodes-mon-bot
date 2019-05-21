@@ -75,7 +75,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.LtcButton, func(m *tb.Message) {
-		message,err := utils.GetMessageOfNodesState("Ltc")
+		message,err := utils.GetMessageOfNodesState("ltc")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -131,6 +131,18 @@ func main() {
 			return
 		}
 
+		if params[1] == "trust"{
+			currency := params[2]
+			address := params[3]
+			message, err := utils.GetApiBalance(currency, address)
+			if err != nil {
+				b.Send(m.Sender, "Problems...")
+				return
+			}
+
+			b.Send(m.Sender, message)
+		}
+
 		currency := params[1]
 		address := params[2]
 
@@ -142,6 +154,8 @@ func main() {
 
 		b.Send(m.Sender, message)
 	})
+
+
 
 	b.Start()
 }

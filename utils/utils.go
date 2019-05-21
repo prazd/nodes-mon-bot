@@ -11,6 +11,8 @@ import (
 	"github.com/prazd/nodes_mon_bot/utils/balance"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"log"
+	"github.com/imroc/req"
+	"github.com/onrik/ethrpc"
 )
 
 type NodesInfo struct {
@@ -268,4 +270,79 @@ func GetBalances(currency string, address string) (string, error) {
 	result := balance.GetFormatMessage(balances)
 
 	return result, nil
+}
+
+// for node api
+// API balances
+func GetApiBalance(currency, address string)(string , error){
+
+	type StellarBalance struct {
+		Balances []struct {
+			Balance             string `json:"balance"`
+			Buying_liabilities  string `json:"buying_liabilities"`
+			Selling_liabilities string `json:"selling_liabilities"`
+			Asset_type          string `json:"asset_type"`
+		}
+	}
+
+	endpoint, err := db.GetApiEndpoint(currency)
+	if err != nil{
+		return "",err
+	}
+
+	btc := []string{
+		"btc",
+		"bch",
+		"ltc",
+	}
+	eth := []string{
+		"eth",
+		"etc",
+	}
+
+	if Contains(currency, btc){
+		balance, err := req.Get(endpoint + address)
+		if err != nil{
+			return "", err
+		}
+		return balance.String(), nil
+
+	}else if Contains(currency, eth){
+		var ethClient = ethrpc.New(endpoint)
+		balance, err := ethClient.EthGetBalance(address,"latest")
+		if err != nil{
+			return "", err
+		}
+		return balance.String(), nil
+
+	} else {
+
+		var stellarBalance StellarBalance
+
+		balance, err := req.Get(endpoint+address)
+		if err != nil{
+			return "", nil
+		}
+
+		err = balance.ToJSON(&stellarBalance)
+		if err != nil {
+			return "", err
+		}
+
+		var stellarBalanceString string
+
+		for _, j := range stellarBalance.Balances {
+			if j.Asset_type == "native" {
+				stellarBalanceString = j.Balance
+			}
+		}
+
+		if stellarBalanceString == "" {
+			stellarBalanceString = "0"
+		}
+
+		return stellarBalanceString, nil
+
+	}
+
 }
