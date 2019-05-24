@@ -13,6 +13,7 @@ import (
 	"log"
 	"github.com/imroc/req"
 	"github.com/onrik/ethrpc"
+	"strconv"
 )
 
 type NodesInfo struct {
@@ -51,6 +52,24 @@ func GetHostInfo(currency string) ([]string, int, error) {
 
 func GetMessageWithResults(result map[string]bool) string {
 	var message string
+
+	if len(result) > 10 {
+		var runningNodesCount int
+		message += "Stopped nodes : "
+		for address, status := range result {
+			switch status {
+			case true:
+				runningNodesCount++
+			case false:
+				message += address + "\n"
+
+			}
+		}
+
+		message += "\nRunning nodes count: " + strconv.Itoa(runningNodesCount)
+		return message
+
+	}
 	for address, status := range result {
 		message += address
 		switch status {
@@ -308,35 +327,36 @@ func GetApiBalance(currency, address string)(string , error){
 
 		var btc BTC
 
-		balance, err := req.Get(endpoint + address)
+		respBtcBalance, err := req.Get(endpoint + address)
 		if err != nil{
 			return "", err
 		}
 
-		err = balance.ToJSON(&btc)
+		err = respBtcBalance.ToJSON(&btc)
 		if err != nil{
 			return "", err
 		}
 		return btc.Balance, nil
 
-	}else if Contains(currency, eth){
+	} else if Contains(currency, eth){
 		var ethClient = ethrpc.New(endpoint)
-		balance, err := ethClient.EthGetBalance(address,"latest")
+
+		respEthBalance, err := ethClient.EthGetBalance(address,"latest")
 		if err != nil{
 			return "", err
 		}
-		return balance.String(), nil
+		return respEthBalance.String(), nil
 
 	} else {
 
 		var stellarBalance StellarBalance
 
-		balance, err := req.Get(endpoint+address)
+		respXlmBalance, err := req.Get(endpoint+address)
 		if err != nil{
 			return "", nil
 		}
 
-		err = balance.ToJSON(&stellarBalance)
+		err = respXlmBalance.ToJSON(&stellarBalance)
 		if err != nil {
 			return "", err
 		}
