@@ -5,15 +5,16 @@ import (
 	"sync"
 	"time"
 
+	"log"
+	"strconv"
+
 	"github.com/anvie/port-scanner"
+	"github.com/imroc/req"
+	"github.com/onrik/ethrpc"
 	"github.com/prazd/nodes_mon_bot/db"
 	"github.com/prazd/nodes_mon_bot/state"
 	"github.com/prazd/nodes_mon_bot/utils/balance"
 	tb "gopkg.in/tucnak/telebot.v2"
-	"log"
-	"github.com/imroc/req"
-	"github.com/onrik/ethrpc"
-	"strconv"
 )
 
 type NodesInfo struct {
@@ -38,12 +39,12 @@ func Worker(wg *sync.WaitGroup, addr string, port int, r *state.SingleState) {
 func GetHostInfo(currency string) ([]string, int, error) {
 
 	addresses, err := db.GetAddresses(currency)
-	if err != nil{
+	if err != nil {
 		return nil, 0, err
 	}
 
 	port, err := db.GetPort(currency)
-	if err != nil{
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -53,7 +54,10 @@ func GetHostInfo(currency string) ([]string, int, error) {
 func GetMessageWithResults(result map[string]bool) string {
 	var message string
 
-	if len(result) > 10 {
+	if len(result) == 0 {
+		message = "Running nodes count: 0"
+		return message
+	} else if len(result) > 10 {
 		var runningNodesCount int
 		message += "Stopped nodes : "
 		for address, status := range result {
@@ -89,8 +93,8 @@ func GetMessageOfNodesState(currency string) (string, error) {
 	nodesState := state.NewSingleState()
 
 	addresses, port, err := GetHostInfo(currency)
-	if err != nil{
-		return "",err
+	if err != nil {
+		return "", err
 	}
 
 	RunWorkers(addresses, port, nodesState)
@@ -120,10 +124,10 @@ func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool {
 	return true
 }
 
-func GetAllNodesFromDB() (map[string]NodesInfo,error) {
+func GetAllNodesFromDB() (map[string]NodesInfo, error) {
 
-	allEntrys,err := db.GetAllNodesEntrys()
-	if err != nil{
+	allEntrys, err := db.GetAllNodesEntrys()
+	if err != nil {
 		return nil, err
 	}
 
@@ -144,19 +148,19 @@ func GetAllNodesFromDB() (map[string]NodesInfo,error) {
 			Addresses: allEntrys["btc"].Addresses,
 		},
 		"LTC": NodesInfo{
-			State:      state.NewSingleState(),
-			Port:       allEntrys["ltc"].Port,
-			Addresses:  allEntrys["ltc"].Addresses,
+			State:     state.NewSingleState(),
+			Port:      allEntrys["ltc"].Port,
+			Addresses: allEntrys["ltc"].Addresses,
 		},
 		"BCH": NodesInfo{
 			State:     state.NewSingleState(),
-			Port:       allEntrys["bch"].Port,
-			Addresses:  allEntrys["bch"].Addresses,
+			Port:      allEntrys["bch"].Port,
+			Addresses: allEntrys["bch"].Addresses,
 		},
 		"XLM": NodesInfo{
 			State:     state.NewSingleState(),
-			Port:       allEntrys["xlm"].Port,
-			Addresses:  allEntrys["xlm"].Addresses,
+			Port:      allEntrys["xlm"].Port,
+			Addresses: allEntrys["xlm"].Addresses,
 		},
 	}, nil
 }
@@ -164,7 +168,7 @@ func GetAllNodesFromDB() (map[string]NodesInfo,error) {
 func FullCheckOfNode(bot *tb.Bot) {
 
 	allNodes, err := GetAllNodesFromDB()
-	if err != nil{
+	if err != nil {
 		log.Println(err)
 	}
 
@@ -224,67 +228,67 @@ func GetBalances(currency string, address string) (string, error) {
 	var balances balance.Balances
 
 	switch currency {
-		case "eth":
-			endpoints, err := db.GetAddresses("eth")
-			if err != nil {
-				return "", err
-			}
-
-			balances, err = balance.GetEthBalance(address, endpoints)
-			if err != nil {
-				return "", err
-			}
-
-		case "etc":
-			endpoints, err := db.GetAddresses("etc")
-			if err != nil {
-				return "", err
-			}
-			balances, err = balance.GetEtcBalance(address, endpoints)
-			if err != nil {
-				return "", err
-			}
-
-		case "btc":
-			endpoints, err := db.GetAddresses("btc")
-			if err != nil {
-				return "", err
-			}
-
-			balances, err = balance.GetBtcBalance(address, endpoints)
-			if err != nil {
-				return "", err
-			}
-
-		case "ltc":
-			endpoints, err := db.GetAddresses("ltc")
-			if err != nil {
-				return "", err
-			}
-			balances, err = balance.GetLtcBalance(address, endpoints)
-			if err != nil {
-				return "", err
-			}
-
-		case "bch":
-			endpoints, err := db.GetAddresses("bch")
-			if err != nil {
-				return "", err
-			}
-			balances, err = balance.GetBchBalance(address,endpoints)
-			if err != nil {
-				return "", err
-			}
-		case "xlm":
-			endpoints, err := db.GetAddresses("xlm")
-			if err != nil {
-				return "", err
-			}
-			balances, err = balance.GetXlmBalance(address, endpoints)
-			if err != nil {
-				return "", err
-			}
+	case "eth":
+		endpoints, err := db.GetAddresses("eth")
+		if err != nil {
+			return "", err
 		}
+
+		balances, err = balance.GetEthBalance(address, endpoints)
+		if err != nil {
+			return "", err
+		}
+
+	case "etc":
+		endpoints, err := db.GetAddresses("etc")
+		if err != nil {
+			return "", err
+		}
+		balances, err = balance.GetEtcBalance(address, endpoints)
+		if err != nil {
+			return "", err
+		}
+
+	case "btc":
+		endpoints, err := db.GetAddresses("btc")
+		if err != nil {
+			return "", err
+		}
+
+		balances, err = balance.GetBtcBalance(address, endpoints)
+		if err != nil {
+			return "", err
+		}
+
+	case "ltc":
+		endpoints, err := db.GetAddresses("ltc")
+		if err != nil {
+			return "", err
+		}
+		balances, err = balance.GetLtcBalance(address, endpoints)
+		if err != nil {
+			return "", err
+		}
+
+	case "bch":
+		endpoints, err := db.GetAddresses("bch")
+		if err != nil {
+			return "", err
+		}
+		balances, err = balance.GetBchBalance(address, endpoints)
+		if err != nil {
+			return "", err
+		}
+	case "xlm":
+		endpoints, err := db.GetAddresses("xlm")
+		if err != nil {
+			return "", err
+		}
+		balances, err = balance.GetXlmBalance(address, endpoints)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	result := balance.GetFormatMessage(balances)
 
@@ -293,7 +297,7 @@ func GetBalances(currency string, address string) (string, error) {
 
 // for node api
 // API balances
-func GetApiBalance(currency, address string)(string , error){
+func GetApiBalance(currency, address string) (string, error) {
 
 	type StellarBalance struct {
 		Balances []struct {
@@ -305,8 +309,8 @@ func GetApiBalance(currency, address string)(string , error){
 	}
 
 	endpoint, err := db.GetApiEndpoint(currency)
-	if err != nil{
-		return "",err
+	if err != nil {
+		return "", err
 	}
 
 	btc := []string{
@@ -319,7 +323,7 @@ func GetApiBalance(currency, address string)(string , error){
 		"etc",
 	}
 
-	if Contains(currency, btc){
+	if Contains(currency, btc) {
 
 		type BTC struct {
 			Balance string `json:"balance"`
@@ -328,21 +332,21 @@ func GetApiBalance(currency, address string)(string , error){
 		var btc BTC
 
 		respBtcBalance, err := req.Get(endpoint + address)
-		if err != nil{
+		if err != nil {
 			return "", err
 		}
 
 		err = respBtcBalance.ToJSON(&btc)
-		if err != nil{
+		if err != nil {
 			return "", err
 		}
 		return btc.Balance, nil
 
-	} else if Contains(currency, eth){
+	} else if Contains(currency, eth) {
 		var ethClient = ethrpc.New(endpoint)
 
-		respEthBalance, err := ethClient.EthGetBalance(address,"latest")
-		if err != nil{
+		respEthBalance, err := ethClient.EthGetBalance(address, "latest")
+		if err != nil {
 			return "", err
 		}
 		return respEthBalance.String(), nil
@@ -351,8 +355,8 @@ func GetApiBalance(currency, address string)(string , error){
 
 		var stellarBalance StellarBalance
 
-		respXlmBalance, err := req.Get(endpoint+address)
-		if err != nil{
+		respXlmBalance, err := req.Get(endpoint + address)
+		if err != nil {
 			return "", nil
 		}
 
