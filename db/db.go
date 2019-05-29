@@ -232,3 +232,23 @@ func GetApiEndpoint(currency string)(string, error){
 }
 
 
+func GetStoppedList(currency string)([]string, error){
+	session, err := mgo.DialWithInfo(&info)
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+
+	var entry schema.NodeInfo
+
+	c := session.DB(database).C(endpoints_collection)
+
+	err = c.Find(bson.M{"currency": currency}).One(&entry)
+	if err != nil {
+		return nil, err
+	}
+
+	return entry.Stopped, nil
+}
+
+

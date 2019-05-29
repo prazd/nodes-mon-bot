@@ -24,7 +24,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	go utils.FullCheckOfNode(b)
+	go utils.CheckStoppedList(b)
 
 	b.Handle("/start", func(m *tb.Message) {
 		err := utils.CheckUser(m.Sender.ID)

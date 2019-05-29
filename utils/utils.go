@@ -59,19 +59,25 @@ func GetMessageWithResults(result map[string]bool) string {
 		return message
 	} else if len(result) > 10 {
 		var runningNodesCount int
-		message += "Stopped nodes : "
+		var stoppedNodesInfo string
 		for address, status := range result {
 			switch status {
 			case true:
 				runningNodesCount++
 			case false:
-				message += address + "\n"
-
+				stoppedNodesInfo += address + "\n"
 			}
 		}
 
-		message += "\nRunning nodes count: " + strconv.Itoa(runningNodesCount)
-		return message
+		if len(stoppedNodesInfo) == 0{
+			message += "\nRunning nodes count: " + strconv.Itoa(runningNodesCount)
+			return message
+
+		}else {
+			message += "\nStopped nodes:" + stoppedNodesInfo
+			message += "\nRunning nodes count: " + strconv.Itoa(runningNodesCount)
+			return message
+		}
 
 	}
 	for address, status := range result {
@@ -114,79 +120,59 @@ func RunWorkers(addresses []string, port int, state *state.SingleState) {
 	wg.Wait()
 }
 
-func isAllNodesUp(addresses []string, port int, state *state.SingleState) bool {
-	RunWorkers(addresses, port, state)
-	for _, j := range state.Result {
-		if j == false {
-			return false
+func CheckStoppedList(bot *tb.Bot) {
+
+	stoppedNodesCount := map[string]int{
+		"eth":0,
+		"etc":0,
+		"btc":0,
+		"ltc":0,
+		"bch":0,
+		"xlm":0,
+	}
+	var message string
+
+	for currency, _ := range stoppedNodesCount{
+		stoppedNodes,err := db.GetStoppedList(currency)
+		if err != nil{
+			log.Fatal(err)
 		}
-	}
-	return true
-}
-
-func GetAllNodesFromDB() (map[string]NodesInfo, error) {
-
-	allEntrys, err := db.GetAllNodesEntrys()
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]NodesInfo{
-		"ETH": NodesInfo{
-			State:     state.NewSingleState(),
-			Port:      allEntrys["eth"].Port,
-			Addresses: allEntrys["eth"].Addresses,
-		},
-		"ETC": NodesInfo{
-			State:     state.NewSingleState(),
-			Port:      allEntrys["etc"].Port,
-			Addresses: allEntrys["etc"].Addresses,
-		},
-		"BTC": NodesInfo{
-			State:     state.NewSingleState(),
-			Port:      allEntrys["btc"].Port,
-			Addresses: allEntrys["btc"].Addresses,
-		},
-		"LTC": NodesInfo{
-			State:     state.NewSingleState(),
-			Port:      allEntrys["ltc"].Port,
-			Addresses: allEntrys["ltc"].Addresses,
-		},
-		"BCH": NodesInfo{
-			State:     state.NewSingleState(),
-			Port:      allEntrys["bch"].Port,
-			Addresses: allEntrys["bch"].Addresses,
-		},
-		"XLM": NodesInfo{
-			State:     state.NewSingleState(),
-			Port:      allEntrys["xlm"].Port,
-			Addresses: allEntrys["xlm"].Addresses,
-		},
-	}, nil
-}
-
-func FullCheckOfNode(bot *tb.Bot) {
-
-	allNodes, err := GetAllNodesFromDB()
-	if err != nil {
-		log.Println(err)
+		stoppedNodesCount[currency] = len(stoppedNodes)
 	}
 
 	for {
-		for currency, nodesInfo := range allNodes {
-			up := isAllNodesUp(nodesInfo.Addresses, nodesInfo.Port, nodesInfo.State)
-			if !up {
-				ids := db.GetAllSubscribers()
-				if ids == nil {
-					continue
-				}
-				message := GetMessageWithResults(nodesInfo.State.Result)
-				for i := 0; i < len(ids); i++ {
-					bot.Send(&tb.User{ID: ids[i]}, "Subscribe message:\nCurrency: "+currency+"\n"+message)
-				}
+		for currency, count := range stoppedNodesCount{
+			stoppedNodes,err := db.GetStoppedList(currency)
+			if err != nil{
+				log.Fatal(err)
+			}
+			if len(stoppedNodes) > count {
+						ids := db.GetAllSubscribers()
+						if ids == nil {
+							continue
+						}
+
+						difference := len(stoppedNodes) - count
+						if difference > 1{
+							message +="Stopped nodes:\n"
+							for i:=1;i<=difference;i++{
+
+								message += stoppedNodes[len(stoppedNodes)-i] + "\n"
+							}
+						}else{
+							message += "Stopped node: " + stoppedNodes[len(stoppedNodes)-1]
+						}
+
+						for i := 0; i < len(ids); i++ {
+							bot.Send(&tb.User{ID: ids[i]}, "Subscribe message:\nCurrency: " + currency + "\n" + message)
+						}
+						stoppedNodesCount[currency] = len(stoppedNodes)
+				        message = ""
+			}else{
+				stoppedNodesCount[currency] = len(stoppedNodes)
 			}
 		}
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Second * 5)
 	}
 }
 
