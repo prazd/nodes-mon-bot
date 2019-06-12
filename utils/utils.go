@@ -136,8 +136,6 @@ func CheckStoppedList(bot *tb.Bot) {
 		"etc":0,
 		"btc":0,
 		"ltc":0,
-		"bch":0,
-		"xlm":0,
 	}
 	var message string
 
