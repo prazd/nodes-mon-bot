@@ -3,6 +3,7 @@ package balance
 import (
 	"github.com/onrik/ethrpc"
 	"github.com/imroc/req"
+	"os"
 )
 
 type Balances map[string]string
@@ -177,7 +178,7 @@ func GetXlmBalance(address string, endpoints []string) (Balances, error){
 
 	var response StellarResponse
 
-	stellarResponse, err := req.Get("https://horizon.stellar.org/accounts/" + address)
+	stellarResponse, err := req.Get(os.Getenv("xlm-api") + address)
 	if err != nil{
 		return nil, err
 	}
@@ -200,42 +201,7 @@ func GetXlmBalance(address string, endpoints []string) (Balances, error){
 	}
 
 
-	balances["horizon.stellar.org"] = stellarBalanceString
-
-	var balanceReq string
-
-	// check other nodes
-	for _, ip := range endpoints {
-
-		balanceReq = "http://" + ip + ":8000/accounts/"+address
-
-		res, err := req.Get(balanceReq)
-		if err != nil {
-			return nil, err
-		}
-
-		var xlmResp StellarResponse
-
-		err = res.ToJSON(&xlmResp)
-		if err != nil {
-			return nil, err
-		}
-
-		var balance string
-
-		for _, j := range xlmResp.Balances {
-			if j.Asset_type == "native" {
-				balance = j.Balance
-			}
-		}
-
-		if balance == "" {
-			balance = "0"
-		}
-
-
-		balances[ip] = balance
-	}
+	balances[os.Getenv("xlm-api")] = stellarBalanceString
 
 	return balances, nil
 }

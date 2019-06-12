@@ -15,6 +15,7 @@ import (
 	"github.com/prazd/nodes_mon_bot/state"
 	"github.com/prazd/nodes_mon_bot/utils/balance"
 	tb "gopkg.in/tucnak/telebot.v2"
+	"os"
 )
 
 type NodesInfo struct {
@@ -97,6 +98,14 @@ func GetMessageWithResults(result map[string]bool) string {
 func GetMessageOfNodesState(currency string) (string, error) {
 
 	nodesState := state.NewSingleState()
+	if currency == "xlm"{
+		message := "api: " + os.Getenv("xlm-api")
+		return message, nil
+
+	} else if currency == "bch" {
+		message := "api: " + os.Getenv("bch-api")
+		return message, nil
+	}
 
 	addresses, port, err := GetHostInfo(currency)
 	if err != nil {
