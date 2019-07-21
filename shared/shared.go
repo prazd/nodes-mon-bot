@@ -1,4 +1,4 @@
-package utils
+package shared
 
 import (
 	"reflect"
@@ -11,20 +11,36 @@ import (
 	"github.com/anvie/port-scanner"
 	"github.com/imroc/req"
 	"github.com/onrik/ethrpc"
-	"github.com/prazd/nodes_mon_bot/db"
-	"github.com/prazd/nodes_mon_bot/state"
-	"github.com/prazd/nodes_mon_bot/utils/balance"
+	"github.com/prazd/nodes_mon_bot/shared/balance"
+	"github.com/prazd/nodes_mon_bot/shared/db"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"os"
 )
 
+type NodesStatus struct {
+	sync.Mutex
+	Result map[string]bool
+}
+
+func New() *NodesStatus {
+	return &NodesStatus{
+		Result: make(map[string]bool),
+	}
+}
+
+func (ds *NodesStatus) Set(key string, value bool) {
+	ds.Lock()
+	defer ds.Unlock()
+	ds.Result[key] = value
+}
+
 type NodesInfo struct {
-	State     *state.SingleState
+	Status    *NodesStatus
 	Port      int
 	Addresses []string
 }
 
-func Worker(wg *sync.WaitGroup, addr string, port int, r *state.SingleState) {
+func Worker(wg *sync.WaitGroup, addr string, port int, r *NodesStatus) {
 	defer wg.Done()
 	ps := portscanner.NewPortScanner(addr, 3*time.Second, 1)
 	isAlive := ps.IsOpen(port)
@@ -97,7 +113,7 @@ func GetMessageWithResults(result map[string]bool) string {
 
 func GetMessageOfNodesState(currency string) (string, error) {
 
-	nodesState := state.NewSingleState()
+	nodesState := New()
 	if currency == "xlm" {
 		message := "api: " + os.Getenv("xlm-api")
 		return message, nil
@@ -119,7 +135,7 @@ func GetMessageOfNodesState(currency string) (string, error) {
 	return message, nil
 }
 
-func RunWorkers(addresses []string, port int, state *state.SingleState) {
+func RunWorkers(addresses []string, port int, state *NodesStatus) {
 	var wg sync.WaitGroup
 
 	for i := 0; i < len(addresses); i++ {

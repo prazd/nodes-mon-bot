@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/prazd/nodes_mon_bot/keyboard"
-	"github.com/prazd/nodes_mon_bot/utils"
+	"github.com/prazd/nodes_mon_bot/shared"
+	"github.com/prazd/nodes_mon_bot/shared/keyboard"
 	"log"
 	"os"
 	"time"
 
-	"github.com/prazd/nodes_mon_bot/db"
+	"github.com/prazd/nodes_mon_bot/shared/db"
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"strings"
@@ -24,10 +24,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	go utils.CheckStoppedList(b)
+	go shared.CheckStoppedList(b)
 
 	b.Handle("/start", func(m *tb.Message) {
-		err := utils.CheckUser(m.Sender.ID)
+		err := shared.CheckUser(m.Sender.ID)
 		if err != nil {
 			log.Println(err)
 			b.Send(m.Sender, "Problems...")
@@ -39,7 +39,7 @@ func main() {
 
 	// Main handlers
 	b.Handle(&keyboard.EthButton, func(m *tb.Message) {
-		message, err := utils.GetMessageOfNodesState("eth")
+		message, err := shared.GetMessageOfNodesState("eth")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -48,7 +48,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.EtcButton, func(m *tb.Message) {
-		message, err := utils.GetMessageOfNodesState("etc")
+		message, err := shared.GetMessageOfNodesState("etc")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -57,7 +57,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.BtcButton, func(m *tb.Message) {
-		message, err := utils.GetMessageOfNodesState("btc")
+		message, err := shared.GetMessageOfNodesState("btc")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -66,7 +66,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.BchButton, func(m *tb.Message) {
-		message, err := utils.GetMessageOfNodesState("bch")
+		message, err := shared.GetMessageOfNodesState("bch")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -75,7 +75,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.LtcButton, func(m *tb.Message) {
-		message, err := utils.GetMessageOfNodesState("ltc")
+		message, err := shared.GetMessageOfNodesState("ltc")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -84,7 +84,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.XlmButton, func(m *tb.Message) {
-		message, err := utils.GetMessageOfNodesState("xlm")
+		message, err := shared.GetMessageOfNodesState("xlm")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -133,7 +133,7 @@ func main() {
 		if params[1] == "trust" {
 			currency := params[2]
 			address := params[3]
-			message, err := utils.GetApiBalance(currency, address)
+			message, err := shared.GetApiBalance(currency, address)
 			if err != nil {
 				b.Send(m.Sender, "Problems...")
 				return
@@ -145,7 +145,7 @@ func main() {
 		currency := params[1]
 		address := params[2]
 
-		message, err := utils.GetBalances(currency, address)
+		message, err := shared.GetBalances(currency, address)
 		if err != nil {
 			b.Send(m.Sender, "Problems...")
 			return

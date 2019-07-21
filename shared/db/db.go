@@ -3,7 +3,7 @@ package db
 import (
 	"os"
 
-	"github.com/prazd/nodes_mon_bot/db/schema"
+	"github.com/prazd/nodes_mon_bot/shared/dbared/db/schema"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"regexp"
