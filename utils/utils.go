@@ -70,11 +70,11 @@ func GetMessageWithResults(result map[string]bool) string {
 			}
 		}
 
-		if len(stoppedNodesInfo) == 0{
+		if len(stoppedNodesInfo) == 0 {
 			message += "\nRunning nodes count: " + strconv.Itoa(runningNodesCount)
 			return message
 
-		}else {
+		} else {
 			message += "\nStopped nodes:" + stoppedNodesInfo
 			message += "\nRunning nodes count: " + strconv.Itoa(runningNodesCount)
 			return message
@@ -98,7 +98,7 @@ func GetMessageWithResults(result map[string]bool) string {
 func GetMessageOfNodesState(currency string) (string, error) {
 
 	nodesState := state.NewSingleState()
-	if currency == "xlm"{
+	if currency == "xlm" {
 		message := "api: " + os.Getenv("xlm-api")
 		return message, nil
 
@@ -132,50 +132,49 @@ func RunWorkers(addresses []string, port int, state *state.SingleState) {
 func CheckStoppedList(bot *tb.Bot) {
 
 	stoppedNodesCount := map[string]int{
-		"eth":0,
-		"etc":0,
-		"btc":0,
-		"ltc":0,
+		"eth": 0,
+		"etc": 0,
+		"btc": 0,
+		"ltc": 0,
 	}
 	var message string
 
-	for currency, _ := range stoppedNodesCount{
-		stoppedNodes,err := db.GetStoppedList(currency)
-		if err != nil{
+	for currency, _ := range stoppedNodesCount {
+		stoppedNodes, err := db.GetStoppedList(currency)
+		if err != nil {
 			log.Fatal(err)
 		}
 		stoppedNodesCount[currency] = len(stoppedNodes)
 	}
 
 	for {
-		for currency, count := range stoppedNodesCount{
-			stoppedNodes,err := db.GetStoppedList(currency)
-			if err != nil{
+		for currency, count := range stoppedNodesCount {
+			stoppedNodes, err := db.GetStoppedList(currency)
+			if err != nil {
 				log.Fatal(err)
 			}
 			if len(stoppedNodes) > count {
-						ids := db.GetAllSubscribers()
-						if ids == nil {
-							continue
-						}
+				ids := db.GetAllSubscribers()
+				if ids == nil {
+					continue
+				}
 
-						difference := len(stoppedNodes) - count
-						if difference > 1{
-							message +="Stopped nodes:\n"
-							for i:=1;i<=difference;i++{
+				difference := len(stoppedNodes) - count
+				if difference > 1 {
+					message += "Stopped nodes:\n"
+					for i := 1; i <= difference; i++ {
+						message += stoppedNodes[len(stoppedNodes)-i] + "\n"
+					}
+				} else {
+					message += "Stopped node: " + stoppedNodes[len(stoppedNodes)-1]
+				}
 
-								message += stoppedNodes[len(stoppedNodes)-i] + "\n"
-							}
-						}else{
-							message += "Stopped node: " + stoppedNodes[len(stoppedNodes)-1]
-						}
-
-						for i := 0; i < len(ids); i++ {
-							bot.Send(&tb.User{ID: ids[i]}, "Subscribe message:\nCurrency: " + currency + "\n" + message)
-						}
-						stoppedNodesCount[currency] = len(stoppedNodes)
-				        message = ""
-			}else{
+				for i := 0; i < len(ids); i++ {
+					bot.Send(&tb.User{ID: ids[i]}, "Subscribe message:\nCurrency: "+currency+"\n"+message)
+				}
+				stoppedNodesCount[currency] = len(stoppedNodes)
+				message = ""
+			} else {
 				stoppedNodesCount[currency] = len(stoppedNodes)
 			}
 		}

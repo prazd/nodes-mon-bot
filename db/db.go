@@ -10,13 +10,13 @@ import (
 )
 
 var (
-	host       = os.Getenv("HOST")
-	database   = os.Getenv("DB")
-	username   = os.Getenv("USER")
-	password   = os.Getenv("PASS")
-	user_collection = os.Getenv("USER_COLL")
-	endpoints_collection =  os.Getenv("ENDPOINTS_COLL")
-	apis_collection = os.Getenv("API_COLL")
+	host                 = os.Getenv("HOST")
+	database             = os.Getenv("DB")
+	username             = os.Getenv("USER")
+	password             = os.Getenv("PASS")
+	user_collection      = os.Getenv("USER_COLL")
+	endpoints_collection = os.Getenv("ENDPOINTS_COLL")
+	apis_collection      = os.Getenv("API_COLL")
 )
 
 var info = mgo.DialInfo{
@@ -131,7 +131,7 @@ func GetAllSubscribers() []int {
 	return usersId
 }
 
-func GetAddresses(currency string)([]string, error){
+func GetAddresses(currency string) ([]string, error) {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return nil, err
@@ -149,15 +149,14 @@ func GetAddresses(currency string)([]string, error){
 
 	re := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
 
-	for i:=0; i<len(entry.Addresses);i++{
-			entry.Addresses[i] = re.FindString(entry.Addresses[i])
+	for i := 0; i < len(entry.Addresses); i++ {
+		entry.Addresses[i] = re.FindString(entry.Addresses[i])
 	}
-
 
 	return entry.Addresses, nil
 }
 
-func GetPort(currency string)(int, error){
+func GetPort(currency string) (int, error) {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return 0, err
@@ -176,43 +175,7 @@ func GetPort(currency string)(int, error){
 	return entry.Port, nil
 }
 
-func GetAllNodesEntrys()(map[string]schema.NodeInfo, error){
-	session, err := mgo.DialWithInfo(&info)
-	if err != nil {
-		return nil, err
-	}
-	defer session.Close()
-
-	re := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
-
-	var entrys []schema.NodeInfo
-
-	c := session.DB(database).C(endpoints_collection)
-
-	err = c.Find(nil).All(&entrys)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, keyEntry := range entrys {
-		for i:=0;i<len(keyEntry.Addresses);i++{
-			keyEntry.Addresses[i] = re.FindString(keyEntry.Addresses[i])
-		}
-	}
-
-	result := map[string]schema.NodeInfo{
-		"btc": entrys[0],
-		"eth": entrys[1],
-		"etc": entrys[2],
-		"bch": entrys[3],
-		"ltc": entrys[4],
-		"xlm": entrys[5],
-	}
-
-	return result, nil
-}
-
-func GetApiEndpoint(currency string)(string, error){
+func GetApiEndpoint(currency string) (string, error) {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return "", err
@@ -231,8 +194,7 @@ func GetApiEndpoint(currency string)(string, error){
 	return entry.Endpoint, nil
 }
 
-
-func GetStoppedList(currency string)([]string, error){
+func GetStoppedList(currency string) ([]string, error) {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
 		return nil, err
@@ -250,5 +212,3 @@ func GetStoppedList(currency string)([]string, error){
 
 	return entry.Stopped, nil
 }
-
-

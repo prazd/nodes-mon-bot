@@ -8,13 +8,11 @@ type User struct {
 type NodeInfo struct {
 	Port      int      `json:"port"`
 	Addresses []string `json:"addresses"`
-	Stopped  []string  `json:"stopped"`
-	Currency string `json:"currency"`
+	Stopped   []string `json:"stopped"`
+	Currency  string   `json:"currency"`
 }
 
 type NodesApi struct {
 	Currency string `json:"currency"`
 	Endpoint string `json:"endpoint"`
 }
-
-

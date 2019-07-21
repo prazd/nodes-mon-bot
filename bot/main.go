@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/prazd/nodes_mon_bot/keyboard"
+	"github.com/prazd/nodes_mon_bot/utils"
 	"log"
 	"os"
 	"time"
-	"github.com/prazd/nodes_mon_bot/keyboard"
-	"github.com/prazd/nodes_mon_bot/utils"
 
 	"github.com/prazd/nodes_mon_bot/db"
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -39,7 +39,7 @@ func main() {
 
 	// Main handlers
 	b.Handle(&keyboard.EthButton, func(m *tb.Message) {
-		message,err := utils.GetMessageOfNodesState("eth")
+		message, err := utils.GetMessageOfNodesState("eth")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -48,7 +48,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.EtcButton, func(m *tb.Message) {
-		message,err := utils.GetMessageOfNodesState("etc")
+		message, err := utils.GetMessageOfNodesState("etc")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -57,7 +57,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.BtcButton, func(m *tb.Message) {
-		message,err := utils.GetMessageOfNodesState("btc")
+		message, err := utils.GetMessageOfNodesState("btc")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -66,7 +66,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.BchButton, func(m *tb.Message) {
-		message,err := utils.GetMessageOfNodesState("bch")
+		message, err := utils.GetMessageOfNodesState("bch")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -75,7 +75,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.LtcButton, func(m *tb.Message) {
-		message,err := utils.GetMessageOfNodesState("ltc")
+		message, err := utils.GetMessageOfNodesState("ltc")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -84,7 +84,7 @@ func main() {
 	})
 
 	b.Handle(&keyboard.XlmButton, func(m *tb.Message) {
-		message,err := utils.GetMessageOfNodesState("xlm")
+		message, err := utils.GetMessageOfNodesState("xlm")
 		if err != nil {
 			b.Send(m.Sender, "Please send /start firstly")
 			return
@@ -125,12 +125,12 @@ func main() {
 	// Balance handler
 	b.Handle("/balance", func(m *tb.Message) {
 		params := strings.Split(m.Text, " ")
-		if len(params) < 3{
+		if len(params) < 3 {
 			b.Send(m.Sender, "Error!")
 			return
 		}
 
-		if params[1] == "trust"{
+		if params[1] == "trust" {
 			currency := params[2]
 			address := params[3]
 			message, err := utils.GetApiBalance(currency, address)

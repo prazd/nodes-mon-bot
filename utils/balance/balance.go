@@ -1,8 +1,8 @@
 package balance
 
 import (
-	"github.com/onrik/ethrpc"
 	"github.com/imroc/req"
+	"github.com/onrik/ethrpc"
 	"os"
 )
 
@@ -82,7 +82,7 @@ func GetBtcBalance(address string, endpoints []string) (Balances, error) {
 	balances := make(Balances)
 
 	response, err := req.Get("https://insight.bitpay.com/api/addr/" + address + "/balance")
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -93,7 +93,7 @@ func GetBtcBalance(address string, endpoints []string) (Balances, error) {
 	// check other nodes
 	for _, ip := range endpoints {
 
-		balanceReq = "http://" + ip + "/insight-api/addr/"+address+"/balance"
+		balanceReq = "http://" + ip + "/insight-api/addr/" + address + "/balance"
 
 		res, err := req.Get(balanceReq)
 		if err != nil {
@@ -111,7 +111,7 @@ func GetLtcBalance(address string, endpoints []string) (Balances, error) {
 	balances := make(Balances)
 
 	response, err := req.Get("https://insight.litecore.io/api/addr/" + address + "/balance")
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -122,7 +122,7 @@ func GetLtcBalance(address string, endpoints []string) (Balances, error) {
 	// check other nodes
 	for _, ip := range endpoints {
 
-		balanceReq = "http://" + ip + ":3001/api/addr/"+address+"/balance"
+		balanceReq = "http://" + ip + ":3001/api/addr/" + address + "/balance"
 
 		res, err := req.Get(balanceReq)
 		if err != nil {
@@ -135,11 +135,11 @@ func GetLtcBalance(address string, endpoints []string) (Balances, error) {
 	return balances, nil
 }
 
-func GetBchBalance(address string, endpoints []string) (Balances, error){
+func GetBchBalance(address string, endpoints []string) (Balances, error) {
 	balances := make(Balances)
 
 	response, err := req.Get("https://blockdozer.com/api/addr/" + address + "/balance")
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -150,7 +150,7 @@ func GetBchBalance(address string, endpoints []string) (Balances, error){
 	// check other nodes
 	for _, ip := range endpoints {
 
-		balanceReq = "http://" + ip + ":3000/api/addr/"+address+"/balance"
+		balanceReq = "http://" + ip + ":3000/api/addr/" + address + "/balance"
 
 		res, err := req.Get(balanceReq)
 		if err != nil {
@@ -163,7 +163,7 @@ func GetBchBalance(address string, endpoints []string) (Balances, error){
 	return balances, nil
 }
 
-func GetXlmBalance(address string, endpoints []string) (Balances, error){
+func GetXlmBalance(address string, endpoints []string) (Balances, error) {
 
 	balances := make(Balances)
 
@@ -179,7 +179,7 @@ func GetXlmBalance(address string, endpoints []string) (Balances, error){
 	var response StellarResponse
 
 	stellarResponse, err := req.Get(os.Getenv("xlm-api") + address)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -200,9 +200,7 @@ func GetXlmBalance(address string, endpoints []string) (Balances, error){
 		stellarBalanceString = "0"
 	}
 
-
 	balances[os.Getenv("xlm-api")] = stellarBalanceString
 
 	return balances, nil
 }
-
