@@ -9,13 +9,13 @@ import (
 
 	"github.com/prazd/nodes_mon_bot/shared/db"
 	tb "gopkg.in/tucnak/telebot.v2"
-
 	"strings"
 )
 
 func main() {
+
 	b, err := tb.NewBot(tb.Settings{
-		Token:  os.Getenv("token"),
+		Token:  os.Getenv("BOT_TOKEN"),
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
 	})
 
@@ -38,62 +38,31 @@ func main() {
 	})
 
 	// Main handlers
-	b.Handle(&keyboard.EthButton, func(m *tb.Message) {
-		message, err := shared.GetMessageOfNodesState("eth")
-		if err != nil {
-			b.Send(m.Sender, "Please send /start firstly")
-			return
-		}
-		b.Send(m.Sender, message)
-	})
+	b.Handle(tb.OnText, func(m *tb.Message) {
 
-	b.Handle(&keyboard.EtcButton, func(m *tb.Message) {
-		message, err := shared.GetMessageOfNodesState("etc")
-		if err != nil {
-			b.Send(m.Sender, "Please send /start firstly")
-			return
-		}
-		b.Send(m.Sender, message)
-	})
+		currenciesList := []string{"ETH", "ETC", "BCH", "BTC", "LTC"}
 
-	b.Handle(&keyboard.BtcButton, func(m *tb.Message) {
-		message, err := shared.GetMessageOfNodesState("btc")
-		if err != nil {
-			b.Send(m.Sender, "Please send /start firstly")
-			return
-		}
-		b.Send(m.Sender, message)
-	})
+		var message string
 
-	b.Handle(&keyboard.BchButton, func(m *tb.Message) {
-		message, err := shared.GetMessageOfNodesState("bch")
-		if err != nil {
-			b.Send(m.Sender, "Please send /start firstly")
-			return
+		for _, currency := range currenciesList {
+			if m.Text == currency {
+				message, err = shared.GetMessageOfNodesState(strings.ToLower(currency))
+				if err != nil {
+					b.Send(m.Sender, "Error...")
+					return
+				} else {
+					b.Send(m.Sender, message)
+					return
+				}
+			}
 		}
-		b.Send(m.Sender, message)
-	})
 
-	b.Handle(&keyboard.LtcButton, func(m *tb.Message) {
-		message, err := shared.GetMessageOfNodesState("ltc")
-		if err != nil {
-			b.Send(m.Sender, "Please send /start firstly")
-			return
-		}
-		b.Send(m.Sender, message)
-	})
+		message = "Sorry, this command doesn't exist"
 
-	b.Handle(&keyboard.XlmButton, func(m *tb.Message) {
-		message, err := shared.GetMessageOfNodesState("xlm")
-		if err != nil {
-			b.Send(m.Sender, "Please send /start firstly")
-			return
-		}
 		b.Send(m.Sender, message)
 	})
 
 	// Subscribe handlers
-
 	b.Handle(&keyboard.SubscriptionStatus, func(m *tb.Message) {
 		message, err := db.GetSubStatus(m.Sender.ID)
 		if err != nil {
@@ -120,38 +89,6 @@ func main() {
 			return
 		}
 		b.Send(m.Sender, "Successfully **unsubscribed** on every currency!", &tb.SendOptions{ParseMode: "Markdown"})
-	})
-
-	// Balance handler
-	b.Handle("/balance", func(m *tb.Message) {
-		params := strings.Split(m.Text, " ")
-		if len(params) < 3 {
-			b.Send(m.Sender, "Error!")
-			return
-		}
-
-		if params[1] == "trust" {
-			currency := params[2]
-			address := params[3]
-			message, err := shared.GetApiBalance(currency, address)
-			if err != nil {
-				b.Send(m.Sender, "Problems...")
-				return
-			}
-
-			b.Send(m.Sender, message)
-		}
-
-		currency := params[1]
-		address := params[2]
-
-		message, err := shared.GetBalances(currency, address)
-		if err != nil {
-			b.Send(m.Sender, "Problems...")
-			return
-		}
-
-		b.Send(m.Sender, message)
 	})
 
 	b.Start()

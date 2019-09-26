@@ -13,13 +13,11 @@ var (
 
 	LtcButton = tb.ReplyButton{Text: "LTC"}
 
-	XlmButton = tb.ReplyButton{Text: "XLM"}
-
 	SubscriptionStatus = tb.ReplyButton{Text: "Subscription status"}
 
 	MainMenu = [][]tb.ReplyButton{
 		[]tb.ReplyButton{SubscriptionStatus},
 		[]tb.ReplyButton{EthButton, EtcButton, BtcButton},
-		[]tb.ReplyButton{XlmButton, BchButton, LtcButton},
+		[]tb.ReplyButton{BchButton, LtcButton},
 	}
 )

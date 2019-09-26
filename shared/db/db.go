@@ -3,20 +3,18 @@ package db
 import (
 	"os"
 
-	"github.com/prazd/nodes_mon_bot/shared/dbared/db/schema"
+	"github.com/prazd/nodes_mon_bot/shared/db/schema"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"regexp"
 )
 
 var (
-	host                 = os.Getenv("HOST")
-	database             = os.Getenv("DB")
-	username             = os.Getenv("USER")
-	password             = os.Getenv("PASS")
-	user_collection      = os.Getenv("USER_COLL")
-	endpoints_collection = os.Getenv("ENDPOINTS_COLL")
-	apis_collection      = os.Getenv("API_COLL")
+	host                = os.Getenv("HOST")
+	database            = os.Getenv("DB")
+	username            = os.Getenv("USER")
+	password            = os.Getenv("PASS")
+	userCollection      = os.Getenv("USER_COLLECTION")
+	endpointsCollection = os.Getenv("ENDPOINTS_COLLECTION")
 )
 
 var info = mgo.DialInfo{
@@ -35,7 +33,7 @@ func IsInDb(id int) (bool, error) {
 
 	var user schema.User
 
-	c := session.DB(database).C(user_collection)
+	c := session.DB(database).C(userCollection)
 
 	err = c.Find(bson.M{"telegram_id": id}).One(&user)
 	if err != nil {
@@ -52,7 +50,7 @@ func CreateUser(id int) error {
 	}
 	defer session.Close()
 
-	c := session.DB(database).C(user_collection)
+	c := session.DB(database).C(userCollection)
 
 	err = c.Insert(&schema.User{Telegram_id: id, Subscription: false})
 	if err != nil {
@@ -69,7 +67,7 @@ func SubscribeOrUnSubscribe(id int, subscription bool) error {
 	}
 	defer session.Close()
 
-	c := session.DB(database).C(user_collection)
+	c := session.DB(database).C(userCollection)
 
 	err = c.Update(bson.M{"telegram_id": id}, bson.M{"$set": bson.M{"subscription": subscription}})
 	if err != nil {
@@ -88,7 +86,7 @@ func GetSubStatus(id int) (string, error) {
 
 	var user schema.User
 
-	c := session.DB(database).C(user_collection)
+	c := session.DB(database).C(userCollection)
 
 	err = c.Find(bson.M{"telegram_id": id}).One(&user)
 	if err != nil {
@@ -117,7 +115,7 @@ func GetAllSubscribers() []int {
 	var users []schema.User
 	var usersId []int
 
-	c := session.DB(database).C(user_collection)
+	c := session.DB(database).C(userCollection)
 
 	err = c.Find(bson.M{"subscription": true}).All(&users)
 	if err != nil {
@@ -131,69 +129,6 @@ func GetAllSubscribers() []int {
 	return usersId
 }
 
-func GetAddresses(currency string) ([]string, error) {
-	session, err := mgo.DialWithInfo(&info)
-	if err != nil {
-		return nil, err
-	}
-	defer session.Close()
-
-	var entry schema.NodeInfo
-
-	c := session.DB(database).C(endpoints_collection)
-
-	err = c.Find(bson.M{"currency": currency}).One(&entry)
-	if err != nil {
-		return nil, err
-	}
-
-	re := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
-
-	for i := 0; i < len(entry.Addresses); i++ {
-		entry.Addresses[i] = re.FindString(entry.Addresses[i])
-	}
-
-	return entry.Addresses, nil
-}
-
-func GetPort(currency string) (int, error) {
-	session, err := mgo.DialWithInfo(&info)
-	if err != nil {
-		return 0, err
-	}
-	defer session.Close()
-
-	var entry schema.NodeInfo
-
-	c := session.DB(database).C(endpoints_collection)
-
-	err = c.Find(bson.M{"currency": currency}).One(&entry)
-	if err != nil {
-		return 0, err
-	}
-
-	return entry.Port, nil
-}
-
-func GetApiEndpoint(currency string) (string, error) {
-	session, err := mgo.DialWithInfo(&info)
-	if err != nil {
-		return "", err
-	}
-	defer session.Close()
-
-	var entry schema.NodesApi
-
-	c := session.DB(database).C(apis_collection)
-
-	err = c.Find(bson.M{"currency": currency}).One(&entry)
-	if err != nil {
-		return "", err
-	}
-
-	return entry.Endpoint, nil
-}
-
 func GetStoppedList(currency string) ([]string, error) {
 	session, err := mgo.DialWithInfo(&info)
 	if err != nil {
@@ -203,7 +138,7 @@ func GetStoppedList(currency string) ([]string, error) {
 
 	var entry schema.NodeInfo
 
-	c := session.DB(database).C(endpoints_collection)
+	c := session.DB(database).C(endpointsCollection)
 
 	err = c.Find(bson.M{"currency": currency}).One(&entry)
 	if err != nil {
@@ -211,4 +146,23 @@ func GetStoppedList(currency string) ([]string, error) {
 	}
 
 	return entry.Stopped, nil
+}
+
+func GetEndpointsByCurrency(currency string) ([]string, error) {
+	session, err := mgo.DialWithInfo(&info)
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+
+	var entry schema.NodeInfo
+
+	c := session.DB(database).C(endpointsCollection)
+
+	err = c.Find(bson.M{"currency": currency}).One(&entry)
+	if err != nil {
+		return nil, err
+	}
+
+	return entry.Addresses, nil
 }

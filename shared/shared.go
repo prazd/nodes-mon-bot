@@ -9,13 +9,14 @@ import (
 	"strconv"
 
 	"github.com/anvie/port-scanner"
-	"github.com/imroc/req"
-	"github.com/onrik/ethrpc"
-	"github.com/prazd/nodes_mon_bot/shared/balance"
 	"github.com/prazd/nodes_mon_bot/shared/db"
 	tb "gopkg.in/tucnak/telebot.v2"
-	"os"
+	"net/url"
+	"regexp"
+	"strings"
 )
+
+var re = regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
 
 type NodesStatus struct {
 	sync.Mutex
@@ -40,9 +41,25 @@ type NodesInfo struct {
 	Addresses []string
 }
 
-func Worker(wg *sync.WaitGroup, addr string, port int, r *NodesStatus) {
+func Worker(wg *sync.WaitGroup, addr string, r *NodesStatus) {
 	defer wg.Done()
-	ps := portscanner.NewPortScanner(addr, 3*time.Second, 1)
+
+	u, _ := url.Parse(addr)
+
+	var (
+		port int
+		host = u.Host
+	)
+
+	switch strings.Contains(host, ":8545") {
+	case true:
+		host = re.FindString(host)
+		port = 8545
+	default:
+		port = 80
+	}
+
+	ps := portscanner.NewPortScanner(host, 3*time.Second, 1)
 	isAlive := ps.IsOpen(port)
 	if !isAlive {
 		time.Sleep(time.Second * 5)
@@ -53,19 +70,14 @@ func Worker(wg *sync.WaitGroup, addr string, port int, r *NodesStatus) {
 	r.Set(addr, isAlive)
 }
 
-func GetHostInfo(currency string) ([]string, int, error) {
+func RunWorkers(addresses []string, state *NodesStatus) {
+	var wg sync.WaitGroup
 
-	addresses, err := db.GetAddresses(currency)
-	if err != nil {
-		return nil, 0, err
+	for i := 0; i < len(addresses); i++ {
+		wg.Add(1)
+		go Worker(&wg, addresses[i], state)
 	}
-
-	port, err := db.GetPort(currency)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return addresses, port, nil
+	wg.Wait()
 }
 
 func GetMessageWithResults(result map[string]bool) string {
@@ -114,35 +126,15 @@ func GetMessageWithResults(result map[string]bool) string {
 func GetMessageOfNodesState(currency string) (string, error) {
 
 	nodesState := New()
-	if currency == "xlm" {
-		message := "api: " + os.Getenv("xlm-api")
-		return message, nil
 
-	} else if currency == "bch" {
-		message := "api: " + os.Getenv("bch-api")
-		return message, nil
-	}
-
-	addresses, port, err := GetHostInfo(currency)
+	addresses, err := db.GetEndpointsByCurrency(currency)
 	if err != nil {
 		return "", err
 	}
 
-	RunWorkers(addresses, port, nodesState)
+	RunWorkers(addresses, nodesState)
 
-	message := GetMessageWithResults(nodesState.Result)
-
-	return message, nil
-}
-
-func RunWorkers(addresses []string, port int, state *NodesStatus) {
-	var wg sync.WaitGroup
-
-	for i := 0; i < len(addresses); i++ {
-		wg.Add(1)
-		go Worker(&wg, addresses[i], port, state)
-	}
-	wg.Wait()
+	return GetMessageWithResults(nodesState.Result), nil
 }
 
 func CheckStoppedList(bot *tb.Bot) {
@@ -152,16 +144,19 @@ func CheckStoppedList(bot *tb.Bot) {
 		"etc": 0,
 		"btc": 0,
 		"ltc": 0,
+		"bch": 0,
 	}
 	var message string
 
-	for currency, _ := range stoppedNodesCount {
+	for currency := range stoppedNodesCount {
 		stoppedNodes, err := db.GetStoppedList(currency)
 		if err != nil {
 			log.Fatal(err)
 		}
 		stoppedNodesCount[currency] = len(stoppedNodes)
 	}
+
+	log.Println("Start check!")
 
 	for {
 		for currency, count := range stoppedNodesCount {
@@ -229,164 +224,4 @@ func CheckUser(id int) error {
 		}
 	}
 	return nil
-}
-
-func GetBalances(currency string, address string) (string, error) {
-
-	var balances balance.Balances
-
-	switch currency {
-	case "eth":
-		endpoints, err := db.GetAddresses("eth")
-		if err != nil {
-			return "", err
-		}
-
-		balances, err = balance.GetEthBalance(address, endpoints)
-		if err != nil {
-			return "", err
-		}
-
-	case "etc":
-		endpoints, err := db.GetAddresses("etc")
-		if err != nil {
-			return "", err
-		}
-		balances, err = balance.GetEtcBalance(address, endpoints)
-		if err != nil {
-			return "", err
-		}
-
-	case "btc":
-		endpoints, err := db.GetAddresses("btc")
-		if err != nil {
-			return "", err
-		}
-
-		balances, err = balance.GetBtcBalance(address, endpoints)
-		if err != nil {
-			return "", err
-		}
-
-	case "ltc":
-		endpoints, err := db.GetAddresses("ltc")
-		if err != nil {
-			return "", err
-		}
-		balances, err = balance.GetLtcBalance(address, endpoints)
-		if err != nil {
-			return "", err
-		}
-
-	case "bch":
-		endpoints, err := db.GetAddresses("bch")
-		if err != nil {
-			return "", err
-		}
-		balances, err = balance.GetBchBalance(address, endpoints)
-		if err != nil {
-			return "", err
-		}
-	case "xlm":
-		endpoints, err := db.GetAddresses("xlm")
-		if err != nil {
-			return "", err
-		}
-		balances, err = balance.GetXlmBalance(address, endpoints)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	result := balance.GetFormatMessage(balances)
-
-	return result, nil
-}
-
-// for node api
-// API balances
-func GetApiBalance(currency, address string) (string, error) {
-
-	type StellarBalance struct {
-		Balances []struct {
-			Balance             string `json:"balance"`
-			Buying_liabilities  string `json:"buying_liabilities"`
-			Selling_liabilities string `json:"selling_liabilities"`
-			Asset_type          string `json:"asset_type"`
-		}
-	}
-
-	endpoint, err := db.GetApiEndpoint(currency)
-	if err != nil {
-		return "", err
-	}
-
-	btc := []string{
-		"btc",
-		"bch",
-		"ltc",
-	}
-	eth := []string{
-		"eth",
-		"etc",
-	}
-
-	if Contains(currency, btc) {
-
-		type BTC struct {
-			Balance string `json:"balance"`
-		}
-
-		var btc BTC
-
-		respBtcBalance, err := req.Get(endpoint + address)
-		if err != nil {
-			return "", err
-		}
-
-		err = respBtcBalance.ToJSON(&btc)
-		if err != nil {
-			return "", err
-		}
-		return btc.Balance, nil
-
-	} else if Contains(currency, eth) {
-		var ethClient = ethrpc.New(endpoint)
-
-		respEthBalance, err := ethClient.EthGetBalance(address, "latest")
-		if err != nil {
-			return "", err
-		}
-		return respEthBalance.String(), nil
-
-	} else {
-
-		var stellarBalance StellarBalance
-
-		respXlmBalance, err := req.Get(endpoint + address)
-		if err != nil {
-			return "", nil
-		}
-
-		err = respXlmBalance.ToJSON(&stellarBalance)
-		if err != nil {
-			return "", err
-		}
-
-		var stellarBalanceString string
-
-		for _, j := range stellarBalance.Balances {
-			if j.Asset_type == "native" {
-				stellarBalanceString = j.Balance
-			}
-		}
-
-		if stellarBalanceString == "" {
-			stellarBalanceString = "0"
-		}
-
-		return stellarBalanceString, nil
-
-	}
-
 }
